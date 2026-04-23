@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>传感器实时监控系统 | 专业版</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; }
+        body { background: #f0f2f5; padding: 24px; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; padding: 12px 24px;
+            background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .header h1 { font-size: 26px; font-weight: 600; color: #0a2540; letter-spacing: -0.3px; }
+        .status-bar { display: flex; gap: 24px; align-items: center; }
+        .status-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-orange { background: #f97316; box-shadow: 0 0 0 2px #fff0e6; }
+        .dot-red { background: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
+
+        /* 上排传感器模块：三张卡片（加速度 / 角速度 / 角度） */
+        .sensor-section {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 24px; margin-bottom: 28px;
+        }
+        .sensor-card {
+            background: white; border-radius: 24px; padding: 20px 20px 24px 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            border: 1px solid #eef2f6;
+        }
+        .sensor-card h3 { 
+            font-size: 20px; font-weight: 600; color: #1e2f3e; 
+            margin-bottom: 18px; padding-left: 4px;
+            border-left: 4px solid #3b82f6; padding-left: 12px;
+        }
+
+        /* 数值区域 —— 干净利落，与曲线彻底分离 */
+        .sensor-values {
+            display: flex; justify-content: space-around;
+            background: #f9fafc; border-radius: 20px;
+            padding: 14px 8px; margin-bottom: 28px;
+            border: 1px solid #eef2f8;
+        }
+        .value-item { text-align: center; min-width: 70px; }
+        .value-item .axis { 
+            font-size: 14px; font-weight: 500; color: #5b6e8c; 
+            letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+        .value-item .num { 
+            font-size: 28px; font-weight: 700; 
+            font-feature-settings: "tnum";
+            font-family: 'JetBrains Mono', monospace, 'Courier New';
+        }
+        .num-x { color: #3b82f6; }
+        .num-y { color: #10b981; }
+        .num-z { color: #f59e0b; }
+
+        /* 图表区域 (独立且干净，无干扰) */
+        .chart {
+            width: 100%; height: 280px; 
+            background: #ffffff; border-radius: 16px;
+        }
+
+        /* 下排姿态模块 */
+        .pose-section {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 24px; margin-top: 8px;
+        }
+        .card {
+            background: white; border-radius: 24px; padding: 20px 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02), 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #eef2f6;
+        }
+        .card h3 { font-size: 20px; font-weight: 600; color: #1e2f3e; margin-bottom: 20px; border-left: 4px solid #8b5cf6; padding-left: 12px; }
+        .pose-3d {
+            width: 100%; height: 200px; background: #fafdff;
+            border-radius: 20px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #94a3b8; background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+        }
+        .pose-data {
+            display: flex; gap: 12px; justify-content: space-around;
+        }
+        .data-item {
+            background: #f8fafc; padding: 10px 16px; border-radius: 16px;
+            text-align: center; flex: 1;
+        }
+        .data-item .label { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+        .data-item .value { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+        .gauge-2d {
+            width: 100%; height: 200px; background: #fef9e8;
+            border-radius: 20px; margin-bottom: 20px;
+            position: relative; background: radial-gradient(circle at 30% 40%, #fff8e7, #fff2df);
+            border: 1px solid #ffe6c7;
+        }
+        .gauge-center {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px; height: 20px; background: #eab308;
+            border-radius: 50%; box-shadow: 0 0 0 4px rgba(234,179,8,0.2);
+        }
+
+        .state-status {
+            margin-bottom: 20px; padding: 14px; border-radius: 20px;
+            text-align: center; font-size: 24px; font-weight: 700;
+        }
+        .state-green { background: #e0f2e9; color: #0b5e42; }
+        .state-yellow { background: #fef7e0; color: #b45309; }
+        .state-red { background: #ffe4e4; color: #b91c1c; }
+        .state-item {
+            margin-bottom: 16px; padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex; justify-content: space-between; align-items: baseline;
+        }
+        .state-item .label { font-size: 15px; color: #475569; font-weight: 500; }
+        .state-item .value { font-size: 26px; font-weight: 700; color: #0f172a; }
+        .state-legend {
+            display: flex; gap: 18px; justify-content: center; margin-top: 20px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+
+        .action-bar {
+            display: flex; gap: 20px; justify-content: center;
+            margin-top: 32px; margin-bottom: 12px;
+        }
+        .btn {
+            padding: 12px 32px; border-radius: 40px; border: none;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-blue { background: #2563eb; color: white; box-shadow: 0 2px 6px rgba(37,99,235,0.2); }
+        .btn-blue:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-white { background: white; color: #1e293b; border: 1px solid #cbd5e1; }
+        .btn-white:hover { background: #f8fafc; border-color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <h1>📡 传感器实时监控系统</h1>
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot dot-orange"></span>
+                <span>模拟数据流 · 实时刷新</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot dot-red"></span>
+                <span>动态曲线记录</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 传感器模块（加速度 / 角速度 / 角度）干净整洁，数值曲线彻底分离 -->
+    <div class="sensor-section">
+        <!-- 加速度卡片 -->
+        <div class="sensor-card">
+            <h3>⚡ 加速度 (g)</h3>
+            <div class="sensor-values">
+                <div class="value-item"><div class="axis">X</div><div class="num num-x" id="acc-x">0.000</div></div>
+                <div class="value-item"><div class="axis">Y</div><div class="num num-y" id="acc-y">0.000</div></div>
+                <div class="value-item"><div class="axis">Z</div><div class="num num-z" id="acc-z">0.000</div></div>
+            </div>
+            <div class="chart" id="chart-acc"></div>
+        </div>
+
+        <!-- 角速度卡片 -->
+        <div class="sensor-card">
+            <h3>🔄 角速度 (°/s)</h3>
+            <div class="sensor-values">
+                <div class="value-item"><div class="axis">X</div><div class="num num-x" id="gyr-x">0.0</div></div>
+                <div class="value-item"><div class="axis">Y</div><div class="num num-y" id="gyr-y">0.0</div></div>
+                <div class="value-item"><div class="axis">Z</div><div class="num num-z" id="gyr-z">0.0</div></div>
+            </div>
+            <div class="chart" id="chart-gyr"></div>
+        </div>
+
+        <!-- 角度卡片（欧拉角） 实现和右边参考图一样极简干净，曲线清晰无重叠 -->
+        <div class="sensor-card">
+            <h3>📐 角度 (deg)</h3>
+            <div class="sensor-values">
+                <div class="value-item"><div class="axis">ROLL (X)</div><div class="num num-x" id="angle-roll">0.0</div></div>
+                <div class="value-item"><div class="axis">PITCH (Y)</div><div class="num num-y" id="angle-pitch">0.0</div></div>
+                <div class="value-item"><div class="axis">YAW (Z)</div><div class="num num-z" id="angle-yaw">0.0</div></div>
+            </div>
+            <div class="chart" id="chart-angle"></div>
+        </div>
+    </div>
+
+    <!-- 姿态模块（不变区域） -->
+    <div class="pose-section">
+        <div class="card">
+            <h3>🧊 3D设备姿态</h3>
+            <div class="pose-3d" id="pose3d">
+                <div style="text-align:center">🎯 动态立方体示意<br><span style="font-size:12px">Roll/Pitch/Yaw 实时更新</span></div>
+            </div>
+            <div class="pose-data">
+                <div class="data-item"><div class="label">Roll</div><div class="value" id="roll-value">0.0°</div></div>
+                <div class="data-item"><div class="label">Pitch</div><div class="value" id="pitch-value">0.0°</div></div>
+                <div class="data-item"><div class="label">Yaw</div><div class="value" id="yaw-value">0.0°</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🧭 2D姿态仪表盘</h3>
+            <div class="gauge-2d" id="gauge2d">
+                <div class="gauge-center" id="gauge-center"></div>
+                <div class="gauge-scale" style="position:absolute; width:100%; height:100%; display: flex; align-items: center; justify-content: center;">
+                    <span style="background:rgba(0,0,0,0.5); color:white; padding:4px 12px; border-radius:40px; font-size:12px;">倾斜指示</span>
+                </div>
+            </div>
+            <div class="pose-data">
+                <div class="data-item"><div class="label">倾斜角度</div><div class="value" id="tilt-angle">0.0°</div></div>
+                <div class="data-item"><div class="label">倾斜方向</div><div class="value" id="tilt-direction">平放</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📊 姿态判定状态</h3>
+            <div class="state-status state-green" id="state-status">平放</div>
+            <div class="state-item"><div class="label">置信度</div><div class="value" id="confidence-value">0%</div></div>
+            <div class="state-item"><div class="label">持续时间</div><div class="value" id="duration-value">0.0s</div></div>
+            <div class="state-legend">
+                <div class="legend-item"><span class="legend-dot" style="background: #10b981; width:12px;height:12px;border-radius:50%;"></span><span>静止</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background: #f59e0b; width:12px;height:12px;border-radius:50%;"></span><span>移动</span></div>
+                <div class="legend-item"><span class="legend-dot" style="background: #ef4444; width:12px;height:12px;border-radius:50%;"></span><span>快速</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn btn-blue" id="export-json">📄 导出 JSON</button>
+        <button class="btn btn-white" id="export-csv">📊 导出机器学习数据集 (CSV)</button>
+    </div>
+
+    <script>
+        // ---------- 1. 初始化三个独立的 ECharts 图表，实现干净不重叠且样式统一，类似最右边示意图风格 ----------
+        const chartAcc = echarts.init(document.getElementById('chart-acc'));
+        const chartGyr = echarts.init(document.getElementById('chart-gyr'));
+        const chartAngle = echarts.init(document.getElementById('chart-angle'));
+
+        // 通用曲线样式：带有圆点，平滑，三色线，X轴隐藏标签保证视觉简洁，网格线浅色
+        const baseOption = {
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(255,255,255,0.96)', borderColor: '#ccc' },
+            legend: { data: ['X', 'Y', 'Z'], left: 'left', icon: 'circle', itemWidth: 20, textStyle: { color: '#334155', fontWeight: 500 }, top: '10' },
+            grid: { left: '45', right: '30', top: '35', bottom: '15', containLabel: false },
+            xAxis: { type: 'category', data: [], axisTick: { show: false }, axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { show: false } },
+            yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f0f2f5', width: 1.2 } }, axisLabel: { fontSize: 11, color: '#5b6e8c' } },
+            series: [
+                { name: 'X', type: 'line', data: [], smooth: true, symbol: 'circle', symbolSize: 6, itemStyle: { color: '#3b82f6' }, lineStyle: { width: 2.2, color: '#3b82f6' }, emphasis: { focus: 'series' } },
+                { name: 'Y', type: 'line', data: [], smooth: true, symbol: 'circle', symbolSize: 6, itemStyle: { color: '#10b981' }, lineStyle: { width: 2.2, color: '#10b981' } },
+                { name: 'Z', type: 'line', data: [], smooth: true, symbol: 'circle', symbolSize: 6, itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2.2, color: '#f59e0b' } }
+            ]
+        };
+
+        // 针对加速度、角速度、角度分别设置Y轴量程（保证曲线不压线，清晰可见，和老师原始参数匹配）
+        chartAcc.setOption({ ...baseOption, yAxis: { ...baseOption.yAxis, min: -1.8, max: 1.8, name: 'g' }, title: { show: false } });
+        chartGyr.setOption({ ...baseOption, yAxis: { ...baseOption.yAxis, min: -18, max: 18, name: '°/s' }, title: { show: false } });
+        chartAngle.setOption({ ...baseOption, yAxis: { ...baseOption.yAxis, min: -25, max: 35, name: 'deg' }, title: { show: false } });
+
+        // ---------- 2. 模拟后端数据引擎（独立数据源，动态产生符合老师界面数值范围且平滑过渡的数据）----------
+        // 为了保证界面美观，使用正弦/随机漫步模拟实时传感器，确保历史曲线滚动且不重叠，数据干净
+        
+        // 数据存储结构（历史深度30个点，实时刷新）
+        let historyData = {
+            acc_x: new Array(30).fill(0), acc_y: new Array(30).fill(0), acc_z: new Array(30).fill(0),
+            gyr_x: new Array(30).fill(0), gyr_y: new Array(30).fill(0), gyr_z: new Array(30).fill(0),
+            roll: new Array(30).fill(0), pitch: new Array(30).fill(0), yaw: new Array(30).fill(0)
+        };
+        
+        // 状态模拟参数
+        let t = 0;
+        let lastAccX = 0.02, lastAccY = 0.01, lastAccZ = 0.98;
+        let lastGyrX = 0.2, lastGyrY = 0.3, lastGyrZ = 0.1;
+        let lastRoll = -2.0, lastPitch = 1.5, lastYaw = 2.0;
+        
+        // 生成动态但平滑的数据（模拟真实传感器，同时保证数据范围如老师界面提示：加速度±1.2，角速度±15内，角度在-20~30之间）
+        function generateSensorData() {
+            t += 0.12;
+            // 加速度: 缓慢变化 + 正弦微动 (模拟人体或移动)
+            let newAccX = 0.15 * Math.sin(t * 0.8) + 0.05 * Math.sin(t * 2.3) + (Math.random() - 0.5) * 0.04;
+            let newAccY = 0.12 * Math.cos(t * 0.7 + 1.2) + 0.03 * Math.sin(t * 1.5) + (Math.random() - 0.5) * 0.04;
+            let newAccZ = 0.98 + 0.18 * Math.sin(t * 0.9) + 0.04 * Math.sin(t * 2.8) + (Math.random() - 0.5) * 0.03;
+            // 限制范围 -1.2 ~ 1.5 之间，视觉舒适
+            newAccX = Math.min(1.3, Math.max(-1.1, newAccX));
+            newAccY = Math.min(1.2, Math.max(-1.2, newAccY));
+            newAccZ = Math.min(1.5, Math.max(0.7, newAccZ));
+            
+            // 角速度: 动态范围 -12 ~ 12 偶尔峰值
+            let newGyrX = 3.5 * Math.sin(t * 1.1) + 1.2 * Math.cos(t * 2.4) + (Math.random() - 0.5) * 0.8;
+            let newGyrY = 4.2 * Math.cos(t * 0.9 + 0.7) + 1.5 * Math.sin(t * 1.9) + (Math.random() - 0.5) * 0.7;
+            let newGyrZ = 2.8 * Math.sin(t * 1.3 + 1.0) + 1.0 * Math.cos(t * 2.1) + (Math.random() - 0.5) * 0.6;
+            newGyrX = Math.min(14.5, Math.max(-14.5, newGyrX));
+            newGyrY = Math.min(14.5, Math.max(-14.5, newGyrY));
+            newGyrZ = Math.min(14, Math.max(-12, newGyrZ));
+            
+            // 欧拉角: 角度值在 -15° ~ 28° 之间，符合角度卡片特征
+            let newRoll = 8.5 * Math.sin(t * 0.5) + 2.2 * Math.cos(t * 0.9) + (Math.random() - 0.5) * 0.5;
+            let newPitch = 7.8 * Math.cos(t * 0.6 + 0.5) + 1.8 * Math.sin(t * 1.2) + (Math.random() - 0.5) * 0.5;
+            let newYaw = 5.5 * Math.sin(t * 0.4 + 1.2) + 3.2 * Math.cos(t * 0.7) + (Math.random() - 0.5) * 0.6;
+            newRoll = Math.min(28, Math.max(-18, newRoll));
+            newPitch = Math.min(26, Math.max(-16, newPitch));
+            newYaw = Math.min(30, Math.max(-20, newYaw));
+            
+            return {
+                acc: { x: newAccX, y: newAccY, z: newAccZ },
+                gyr: { x: newGyrX, y: newGyrY, z: newGyrZ },
+                euler: { roll: newRoll, pitch: newPitch, yaw: newYaw }
+            };
+        }
+        
+        // 根据加速度和角速度计算姿态判定 (平放/移动中/快速移动)
+        function computeState(acc, gyr) {
+            const accMag = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
+            const gyroMag = Math.abs(gyr.x) + Math.abs(gyr.y) + Math.abs(gyr.z);
+            // 平放条件：加速度接近1g且角速度很小
+            if (Math.abs(accMag - 1.0) < 0.12 && gyroMag < 1.5) return { state: "平放", confidence: 92 + Math.floor(Math.random() * 6) };
+            if (gyroMag > 8.5 || accMag > 1.45) return { state: "快速运动", confidence: 85 + Math.floor(Math.random() * 10) };
+            if (gyroMag > 2.5 || Math.abs(accMag - 1.0) > 0.25) return { state: "移动中", confidence: 70 + Math.floor(Math.random() * 15) };
+            return { state: "平放", confidence: 88 + Math.floor(Math.random() * 8) };
+        }
+        
+        // 倾斜角度和方向 (基于roll和pitch)
+        function computeTilt(roll, pitch) {
+            let tilt = Math.sqrt(roll*roll + pitch*pitch);
+            let direction = "平放";
+            if (tilt > 2.0) {
+                if (Math.abs(roll) > Math.abs(pitch)) direction = roll > 0 ? "右倾" : "左倾";
+                else direction = pitch > 0 ? "前倾" : "后倾";
+                if (tilt > 15) direction = "大角度" + direction;
+            } else {
+                direction = "水平";
+            }
+            return { tiltAngle: tilt.toFixed(1), direction };
+        }
+        
+        // 更新时间计数器用于持续时间模拟 (每次100ms刷新，简单模拟)
+        let durationCounter = 0;
+        let lastState = "平放";
+        
+        function updateSimulation() {
+            const newData = generateSensorData();
+            // 更新历史队列 (滚动)
+            const updateHistory = (arr, val) => { arr.push(val); arr.shift(); };
+            updateHistory(historyData.acc_x, newData.acc.x);
+            updateHistory(historyData.acc_y, newData.acc.y);
+            updateHistory(historyData.acc_z, newData.acc.z);
+            updateHistory(historyData.gyr_x, newData.gyr.x);
+            updateHistory(historyData.gyr_y, newData.gyr.y);
+            updateHistory(historyData.gyr_z, newData.gyr.z);
+            updateHistory(historyData.roll, newData.euler.roll);
+            updateHistory(historyData.pitch, newData.euler.pitch);
+            updateHistory(historyData.yaw, newData.euler.yaw);
+            
+            // 计算状态
+            const stateInfo = computeState(newData.acc, newData.gyr);
+            const currentState = stateInfo.state;
+            if (currentState === lastState) {
+                durationCounter += 0.1;
+            } else {
+                durationCounter = 0.1;
+                lastState = currentState;
+            }
+            const tiltRes = computeTilt(newData.euler.roll, newData.euler.pitch);
+            
+            // 构建now数据对象，兼容原导出结构
+            const nowPayload = {
+                acceleration: newData.acc,
+                angular_velocity: newData.gyr,
+                euler_angle: newData.euler,
+                tilt_angle: parseFloat(tiltRes.tiltAngle),
+                tilt_direction: tiltRes.direction,
+                state: currentState,
+                confidence: stateInfo.confidence,
+                duration: parseFloat(durationCounter.toFixed(1))
+            };
+            
+            // 更新DOM数值区（干净整洁）
+            document.getElementById('acc-x').innerText = newData.acc.x.toFixed(3);
+            document.getElementById('acc-y').innerText = newData.acc.y.toFixed(3);
+            document.getElementById('acc-z').innerText = newData.acc.z.toFixed(3);
+            document.getElementById('gyr-x').innerText = newData.gyr.x.toFixed(1);
+            document.getElementById('gyr-y').innerText = newData.gyr.y.toFixed(1);
+            document.getElementById('gyr-z').innerText = newData.gyr.z.toFixed(1);
+            document.getElementById('angle-roll').innerText = newData.euler.roll.toFixed(1);
+            document.getElementById('angle-pitch').innerText = newData.euler.pitch.toFixed(1);
+            document.getElementById('angle-yaw').innerText = newData.euler.yaw.toFixed(1);
+            
+            // 姿态模块
+            document.getElementById('roll-value').innerText = `${newData.euler.roll.toFixed(1)}°`;
+            document.getElementById('pitch-value').innerText = `${newData.euler.pitch.toFixed(1)}°`;
+            document.getElementById('yaw-value').innerText = `${newData.euler.yaw.toFixed(1)}°`;
+            document.getElementById('tilt-angle').innerText = `${tiltRes.tiltAngle}°`;
+            document.getElementById('tilt-direction').innerText = tiltRes.direction;
+            document.getElementById('confidence-value').innerText = `${stateInfo.confidence}%`;
+            document.getElementById('duration-value').innerText = `${durationCounter.toFixed(1)}s`;
+            
+            const stateEl = document.getElementById('state-status');
+            stateEl.innerText = currentState;
+            if (currentState === '平放') stateEl.className = 'state-status state-green';
+            else if (currentState === '移动中') stateEl.className = 'state-status state-yellow';
+            else stateEl.className = 'state-status state-red';
+            
+            // 简单2D仪表盘视觉反馈: 根据倾斜角度移动中心点的小效果（优雅指示）
+            const gaugeCenter = document.getElementById('gauge-center');
+            const tiltVal = parseFloat(tiltRes.tiltAngle);
+            let offsetX = 0, offsetY = 0;
+            if (tiltVal > 0.5) {
+                const maxOffset = 22;
+                offsetX = (newData.euler.roll / 20) * maxOffset;
+                offsetY = (newData.euler.pitch / 20) * maxOffset;
+                offsetX = Math.min(maxOffset, Math.max(-maxOffset, offsetX));
+                offsetY = Math.min(maxOffset, Math.max(-maxOffset, offsetY));
+            }
+            gaugeCenter.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+            
+            // 更新ECharts曲线（保持干净不重叠，且滚动）
+            const xAxisData = Array.from({ length: 30 }, (_, i) => i);
+            chartAcc.setOption({ xAxis: { data: xAxisData }, series: [
+                { data: [...historyData.acc_x] }, { data: [...historyData.acc_y] }, { data: [...historyData.acc_z] }
+            ]});
+            chartGyr.setOption({ xAxis: { data: xAxisData }, series: [
+                { data: [...historyData.gyr_x] }, { data: [...historyData.gyr_y] }, { data: [...historyData.gyr_z] }
+            ]});
+            chartAngle.setOption({ xAxis: { data: xAxisData }, series: [
+                { data: [...historyData.roll] }, { data: [...historyData.pitch] }, { data: [...historyData.yaw] }
+            ]});
+            
+            // 存储当前数据以供导出
+            window.latestFullData = {
+                now: nowPayload,
+                history: {
+                    acc_x: [...historyData.acc_x], acc_y: [...historyData.acc_y], acc_z: [...historyData.acc_z],
+                    gyr_x: [...historyData.gyr_x], gyr_y: [...historyData.gyr_y], gyr_z: [...historyData.gyr_z],
+                    roll: [...historyData.roll], pitch: [...historyData.pitch], yaw: [...historyData.yaw]
+                }
+            };
+        }
+        
+        // 启动定时器 (100ms刷新，和老师原始体验一致)
+        setInterval(updateSimulation, 100);
+        
+        // 导出JSON
+        document.getElementById('export-json').addEventListener('click', () => {
+            if (!window.latestFullData) return alert("数据未就绪");
+            const dataStr = JSON.stringify(window.latestFullData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sensor_data_${new Date().toISOString().slice(0,19)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        // 导出CSV (机器学习数据集)
+        document.getElementById('export-csv').addEventListener('click', () => {
+            if (!window.latestFullData) return alert("等待数据");
+            const hist = window.latestFullData.history;
+            const rows = [];
+            rows.push(["timestamp_idx","acc_x","acc_y","acc_z","gyr_x","gyr_y","gyr_z","roll","pitch","yaw"]);
+            for (let i = 0; i < hist.acc_x.length; i++) {
+                rows.push([
+                    i, hist.acc_x[i].toFixed(4), hist.acc_y[i].toFixed(4), hist.acc_z[i].toFixed(4),
+                    hist.gyr_x[i].toFixed(2), hist.gyr_y[i].toFixed(2), hist.gyr_z[i].toFixed(2),
+                    hist.roll[i].toFixed(2), hist.pitch[i].toFixed(2), hist.yaw[i].toFixed(2)
+                ]);
+            }
+            const csvContent = rows.map(row => row.join(",")).join("\n");
+            const blob = new Blob(["\uFEFF" + csvContent], {type: "text/csv;charset=utf-8;"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ml_dataset_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        // 自适应
+        window.addEventListener('resize', () => {
+            chartAcc.resize(); chartGyr.resize(); chartAngle.resize();
+        });
+        
+        // 初始化一次立即生成数据
+        setTimeout(() => { updateSimulation(); }, 20);
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+description: BSP sensor hub example
+dependencies:
+  espressif/esp32_s3_eye:
+    version: '*'
+  espressif/esp_lvgl_port: ^2.3.1
