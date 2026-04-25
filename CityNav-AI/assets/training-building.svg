@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="实训楼图标">
+  <rect width="128" height="128" rx="8" fill="#ebfff6"/>
+  <path d="M24 100V48l40-24 40 24v52" fill="#fff" stroke="#19a974" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M44 100V70h40v30" fill="#d8f8ea" stroke="#19a974" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M42 52h12M62 52h12M82 52h8" stroke="#1e88ff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M25 100h78" stroke="#20c997" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="38" cy="34" r="7" fill="#ffcf5a"/>
+</svg>

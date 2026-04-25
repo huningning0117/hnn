@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="校门口图标">
+  <rect width="128" height="128" rx="8" fill="#eaf7ff"/>
+  <path d="M20 98h88" stroke="#168aad" stroke-width="6" stroke-linecap="round"/>
+  <path d="M28 98V50l12-18h48l12 18v48" fill="#fff" stroke="#168aad" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M45 98V66h38v32" fill="#dff5ff" stroke="#168aad" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M42 32h44M52 50h24" stroke="#20c997" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="32" cy="36" r="6" fill="#ffcf5a"/>
+</svg>
