@@ -3,7 +3,8 @@ const typeConfig = {
   text: { label: "文字", icon: "edit", tone: "手动记录" },
   clipboard: { label: "剪贴板", icon: "clip", tone: "剪贴板模拟" },
   todo: { label: "待办", icon: "check", tone: "待办整理" },
-  idea: { label: "灵感", icon: "spark", tone: "灵感捕捉" }
+  idea: { label: "灵感", icon: "spark", tone: "灵感捕捉" },
+  meeting: { label: "会议", icon: "cpu", tone: "ESP32 硬件采集" }
 };
 
 const mockMemories = [
@@ -93,15 +94,53 @@ const timeline = [
   { time: "10:10", title: "灵感碎片进入时间线", detail: "时间线式记忆想法已加入产品设计分类。" }
 ];
 
+const meetingFlowSteps = [
+  {
+    key: "hardware",
+    title: "硬件采集中",
+    desc: "ESP32 端已触发采集，正在上传测试文本",
+    progress: 34
+  },
+  {
+    key: "ai",
+    title: "AI 整理中",
+    desc: "正在生成摘要、重点、待办和标签",
+    progress: 72
+  },
+  {
+    key: "complete",
+    title: "整理完成",
+    desc: "会议结果已生成并保存到记忆舱",
+    progress: 100
+  }
+];
+
+const mockMeetingContent = {
+  rawContent:
+    "今天小组讨论了瞬忆 AI 记忆助手的比赛展示方案。硬件端用 ESP32 模拟采集触发，APP 首页需要突出开始会议记录流程，后端先返回 mock AI 结果。答辩时要强调软硬件联动、隐私边界和后续接入真实大模型的计划。",
+  summary:
+    "本次会议明确了瞬忆 Demo 的比赛展示路径：先用 ESP32 触发采集和 mock AI 数据打通闭环，APP 负责展示会议整理结果，后续再接入真实语音识别和大模型接口。",
+  keyPoints: ["ESP32 负责演示采集触发", "APP 增加会议记录流程入口", "后端优先返回稳定 mock AI 结果", "答辩强调软硬件联动和隐私边界"],
+  todos: ["完善首页开始会议记录交互", "准备 ESP32 上传测试文本接口", "补充答辩中的安全边界说明"],
+  tags: ["会议", "ESP32", "AI 整理", "比赛演示"]
+};
+
 const state = {
   tab: "home",
   filter: "all",
   query: "",
-  expandedId: "m003"
+  expandedId: "m003",
+  meeting: {
+    status: "idle",
+    progress: 0,
+    resultId: ""
+  }
 };
 
 const app = document.querySelector("#app");
 const navButtons = document.querySelectorAll(".nav-item");
+const splashScreen = document.querySelector("#splash-screen");
+let meetingTimerIds = [];
 
 const icons = {
   mic: '<path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M18 10.5a6 6 0 0 1-12 0M12 18v3M9 21h6"/>',
@@ -137,6 +176,85 @@ function escapeHtml(value) {
 
 function formatImportance(importance) {
   return (importance / 10).toFixed(1).replace(/\.0$/, "");
+}
+
+function getMeetingStepIndex(status) {
+  return meetingFlowSteps.findIndex((step) => step.key === status);
+}
+
+function getMeetingStatusMeta() {
+  return meetingFlowSteps.find((step) => step.key === state.meeting.status) || {
+    key: "idle",
+    title: "待命中",
+    desc: "点击开始后模拟 ESP32 采集与 AI 整理",
+    progress: 0
+  };
+}
+
+function formatCurrentTime() {
+  const now = new Date();
+  const hour = String(now.getHours()).padStart(2, "0");
+  const minute = String(now.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function createMeetingMemory() {
+  const time = formatCurrentTime();
+  return {
+    id: `meeting-${Date.now()}`,
+    type: "meeting",
+    title: "ESP32 会议整理结果",
+    rawContent: mockMeetingContent.rawContent,
+    aiContent: mockMeetingContent.summary,
+    keyPoints: [...mockMeetingContent.keyPoints],
+    todos: [...mockMeetingContent.todos],
+    tag: [...mockMeetingContent.tags],
+    time,
+    location: "演示现场",
+    source: "ESP32 硬件采集",
+    importance: 96
+  };
+}
+
+function clearMeetingTimers() {
+  meetingTimerIds.forEach((timerId) => window.clearTimeout(timerId));
+  meetingTimerIds = [];
+}
+
+function setMeetingStatus(status) {
+  const meta = meetingFlowSteps.find((step) => step.key === status);
+  state.meeting.status = status;
+  state.meeting.progress = meta?.progress || 0;
+  render();
+}
+
+function completeMeetingRecord() {
+  const meetingMemory = createMeetingMemory();
+  mockMemories.unshift(meetingMemory);
+  state.meeting.status = "complete";
+  state.meeting.progress = 100;
+  state.meeting.resultId = meetingMemory.id;
+  state.expandedId = meetingMemory.id;
+  render();
+  showToast("已保存到记忆舱");
+}
+
+function startMeetingRecord() {
+  if (state.meeting.status === "hardware" || state.meeting.status === "ai") {
+    return;
+  }
+
+  clearMeetingTimers();
+  state.meeting.resultId = "";
+  setMeetingStatus("hardware");
+
+  meetingTimerIds = [
+    window.setTimeout(() => setMeetingStatus("ai"), 1300),
+    window.setTimeout(() => {
+      completeMeetingRecord();
+      clearMeetingTimers();
+    }, 2800)
+  ];
 }
 
 function render() {
@@ -190,11 +308,11 @@ function renderHome() {
 
         <div class="status-grid" aria-label="今日记忆状态">
           <div class="metric-tile">
-            <span class="metric-value">5</span>
+            <span class="metric-value">${mockMemories.length}</span>
             <span class="metric-label">今日有效记忆</span>
           </div>
           <div class="metric-tile">
-            <span class="metric-value">5</span>
+            <span class="metric-value">${mockMemories.length}</span>
             <span class="metric-label">自动归档</span>
           </div>
           <div class="metric-tile">
@@ -203,6 +321,8 @@ function renderHome() {
           </div>
         </div>
       </section>
+
+      ${renderMeetingRecorder()}
 
       <div class="section-head">
         <div>
@@ -239,6 +359,74 @@ function renderHome() {
       <div class="focus-list">
         ${focusMemories}
       </div>
+    </section>
+  `;
+}
+
+function renderMeetingRecorder() {
+  const meta = getMeetingStatusMeta();
+  const activeIndex = getMeetingStepIndex(state.meeting.status);
+  const isRunning = state.meeting.status === "hardware" || state.meeting.status === "ai";
+  const isComplete = state.meeting.status === "complete";
+  const result = isComplete ? mockMemories.find((item) => item.id === state.meeting.resultId) : null;
+  const buttonText = isRunning ? "会议记录进行中" : isComplete ? "再次模拟会议记录" : "开始会议记录";
+
+  return `
+    <section class="meeting-recorder ${isRunning ? "is-running" : ""} ${isComplete ? "is-complete" : ""}" aria-label="会议记录模拟流程">
+      <div class="meeting-recorder-head">
+        <div>
+          <span class="source-pill">Mock 流程 · 不调用真实麦克风</span>
+          <h2>会议记录模拟</h2>
+          <p>${escapeHtml(meta.desc)}</p>
+        </div>
+        <div class="meeting-orb" aria-hidden="true">
+          <span>${state.meeting.progress || 0}%</span>
+        </div>
+      </div>
+
+      <button class="meeting-start-btn" type="button" data-meeting-start ${isRunning ? "disabled" : ""}>
+        <span class="meeting-start-icon">${icon("cpu")}</span>
+        <span>
+          <strong>${escapeHtml(buttonText)}</strong>
+          <small>${isRunning ? escapeHtml(meta.title) : "ESP32 测试文本 + mock AI 整理"}</small>
+        </span>
+      </button>
+
+      <div class="meeting-progress" aria-label="会议记录进度">
+        <span style="width: ${state.meeting.progress}%"></span>
+      </div>
+
+      <div class="meeting-flow">
+        ${meetingFlowSteps.map((step, index) => {
+          const isStepActive = step.key === state.meeting.status;
+          const isStepDone = activeIndex > index || state.meeting.status === "complete";
+          return `
+            <div class="meeting-step ${isStepActive ? "is-active" : ""} ${isStepDone ? "is-done" : ""}">
+              <span class="meeting-step-dot" aria-hidden="true"></span>
+              <strong>${escapeHtml(step.title)}</strong>
+              <small>${escapeHtml(step.desc)}</small>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      ${result ? `
+        <div class="meeting-result-preview">
+          <div>
+            <span class="content-label">最新会议结果</span>
+            <strong>${escapeHtml(result.title)}</strong>
+            <p>${escapeHtml(result.aiContent)}</p>
+          </div>
+          <div class="tag-row">
+            ${result.tag.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join("")}
+          </div>
+          <div class="meeting-result-meta">
+            <span>来源：${escapeHtml(result.source)}</span>
+            <span>时间：${escapeHtml(result.time)}</span>
+            <span>评分：${formatImportance(result.importance)}/10</span>
+          </div>
+        </div>
+      ` : ""}
     </section>
   `;
 }
@@ -343,6 +531,7 @@ function renderCapsule() {
         ${renderFilter("clipboard", "剪贴板")}
         ${renderFilter("todo", "待办")}
         ${renderFilter("idea", "灵感")}
+        ${renderFilter("meeting", "会议")}
       </div>
 
       ${renderCapsuleHighlights()}
@@ -367,7 +556,7 @@ function renderCapsule() {
       </div>
 
       <div class="category-grid">
-        ${categoryStats.map((item) => `
+        ${getCategoryStats().map((item) => `
           <div class="category-tile">
             <strong>${item.count}</strong>
             <span>${escapeHtml(item.name)}</span>
@@ -427,9 +616,27 @@ function renderMemoryList(list = getFilteredMemories()) {
   return list.map(renderMemoryCard).join("");
 }
 
+function getCategoryStats() {
+  const counts = new Map();
+  mockMemories.forEach((memory) => {
+    memory.tag.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1));
+  });
+
+  const preferred = ["会议", "ESP32", "AI 整理", "项目答辩", "待办", "灵感", "学习", "剪贴板", "UI 优化"];
+  const preferredStats = preferred
+    .filter((name) => counts.has(name))
+    .map((name) => ({ name, count: counts.get(name) }));
+  const fallbackStats = categoryStats.filter((item) => !preferredStats.some((stat) => stat.name === item.name));
+
+  return [...preferredStats, ...fallbackStats].slice(0, 6);
+}
+
 function renderMemoryCard(item) {
   const config = typeConfig[item.type];
   const isOpen = state.expandedId === item.id;
+  const source = item.source || config.label;
+  const beforeLabel = item.type === "meeting" ? "原始识别文本" : "AI 修正前 · 原始碎片";
+  const afterLabel = item.type === "meeting" ? "AI 摘要" : "AI 修正后 · 清晰记忆";
   return `
     <article class="memory-card${isOpen ? " is-open" : ""}" data-memory-id="${escapeHtml(item.id)}">
       <div class="memory-card-head">
@@ -446,7 +653,7 @@ function renderMemoryCard(item) {
 
       <div class="memory-compare">
         <div class="content-block before-block">
-          <span class="content-label">AI 修正前 · 原始碎片</span>
+          <span class="content-label">${escapeHtml(beforeLabel)}</span>
           <p>${escapeHtml(item.rawContent)}</p>
         </div>
         <div class="compare-arrow" aria-hidden="true">
@@ -457,7 +664,7 @@ function renderMemoryCard(item) {
           </svg>
         </div>
         <div class="content-block after-block">
-          <span class="content-label">AI 修正后 · 清晰记忆</span>
+          <span class="content-label">${escapeHtml(afterLabel)}</span>
           <p>${escapeHtml(item.aiContent)}</p>
         </div>
       </div>
@@ -469,17 +676,51 @@ function renderMemoryCard(item) {
       <div class="archive-strip" aria-label="自动分类和归档状态">
         <span>自动分类：${escapeHtml(item.tag[0])}</span>
         <span>自动归档：长期记忆</span>
+        <span>来源：${escapeHtml(source)}</span>
         <span>可回溯：${escapeHtml(item.time)} · ${escapeHtml(item.location)}</span>
       </div>
 
+      ${renderMemoryDetail(item, config, source)}
+    </article>
+  `;
+}
+
+function renderMemoryDetail(item, config, source) {
+  if (item.type === "meeting") {
+    return `
       <div class="detail-panel">
-        <p>完整内容：${escapeHtml(item.aiContent)} 该片段已进入 ${escapeHtml(item.tag[0])} 分类，并自动归档到长期记忆库。</p>
+        <div class="meeting-detail-grid">
+          <section>
+            <span class="content-label">会议重点</span>
+            <ul>
+              ${item.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
+            </ul>
+          </section>
+          <section>
+            <span class="content-label">待办事项</span>
+            <ul>
+              ${item.todos.map((todo) => `<li>${escapeHtml(todo)}</li>`).join("")}
+            </ul>
+          </section>
+        </div>
         <div class="trace-line">
-          <span>来源：${escapeHtml(config.label)}</span>
+          <span>来源：${escapeHtml(source)}</span>
           <span>时间：${escapeHtml(item.time)}</span>
+          <span>重要程度：${formatImportance(item.importance)}/10</span>
+          <span>自动标签：${item.tag.map(escapeHtml).join("、")}</span>
         </div>
       </div>
-    </article>
+    `;
+  }
+
+  return `
+    <div class="detail-panel">
+      <p>完整内容：${escapeHtml(item.aiContent)} 该片段已进入 ${escapeHtml(item.tag[0])} 分类，并自动归档到长期记忆库。</p>
+      <div class="trace-line">
+        <span>来源：${escapeHtml(config.label)}</span>
+        <span>时间：${escapeHtml(item.time)}</span>
+      </div>
+    </div>
   `;
 }
 
@@ -499,11 +740,11 @@ function renderProfile() {
 
         <div class="profile-stats" aria-label="记忆资产统计">
           <div class="profile-stat">
-            <strong>5</strong>
+            <strong>${mockMemories.length}</strong>
             <span>长期记忆</span>
           </div>
           <div class="profile-stat">
-            <strong>5</strong>
+            <strong>${mockMemories.length}</strong>
             <span>今日记忆</span>
           </div>
           <div class="profile-stat">
@@ -625,7 +866,16 @@ function getFilteredMemories() {
   const query = state.query.trim().toLowerCase();
   return mockMemories.filter((item) => {
     const typeMatches = state.filter === "all" || item.type === state.filter;
-    const searchText = `${item.title} ${item.rawContent} ${item.aiContent} ${item.tag.join(" ")} ${item.location}`.toLowerCase();
+    const searchText = [
+      item.title,
+      item.rawContent,
+      item.aiContent,
+      item.tag.join(" "),
+      item.location,
+      item.source || "",
+      item.keyPoints?.join(" ") || "",
+      item.todos?.join(" ") || ""
+    ].join(" ").toLowerCase();
     return typeMatches && (!query || searchText.includes(query));
   });
 }
@@ -658,6 +908,30 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 1900);
 }
 
+function initSplashScreen() {
+  if (!splashScreen) {
+    return;
+  }
+
+  const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const displayDuration = shouldReduceMotion ? 1000 : 3800;
+  const exitDuration = shouldReduceMotion ? 180 : 520;
+  let isClosed = false;
+
+  const closeSplash = () => {
+    if (isClosed) {
+      return;
+    }
+
+    isClosed = true;
+    splashScreen.classList.add("is-leaving");
+    document.body.classList.add("splash-complete");
+    window.setTimeout(() => splashScreen.remove(), exitDuration);
+  };
+
+  window.setTimeout(closeSplash, displayDuration);
+}
+
 navButtons.forEach((button) => {
   button.addEventListener("click", () => {
     state.tab = button.dataset.tab;
@@ -666,6 +940,12 @@ navButtons.forEach((button) => {
 });
 
 app.addEventListener("click", (event) => {
+  const meetingStartButton = event.target.closest("[data-meeting-start]");
+  if (meetingStartButton) {
+    startMeetingRecord();
+    return;
+  }
+
   const filterButton = event.target.closest("[data-filter]");
   if (filterButton) {
     state.filter = filterButton.dataset.filter;
@@ -695,3 +975,4 @@ app.addEventListener("input", (event) => {
 });
 
 render();
+initSplashScreen();

@@ -1,0 +1,19 @@
+{
+  "name": "shunyi-ai-memory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "瞬忆 · AI 记忆助手 mock demo packaged with Capacitor.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "cap:sync:android": "npm run build && npx cap sync android",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  }
+}

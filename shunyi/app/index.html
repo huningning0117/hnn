@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>瞬忆 · AI 碎片记忆管理系统</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237c5cff'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='34' fill='white' font-family='Arial'%3E%E7%9E%AC%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <section id="splash-screen" class="splash-screen" aria-label="瞬忆启动动画">
+        <div class="splash-grid" aria-hidden="true"></div>
+        <div class="splash-aurora" aria-hidden="true"></div>
+
+        <div class="splash-particles" aria-hidden="true">
+          <span style="--x: -152px; --y: -226px; --mx: -82px; --my: -118px; --d: 120ms"></span>
+          <span style="--x: 138px; --y: -214px; --mx: 72px; --my: -106px; --d: 30ms"></span>
+          <span style="--x: -182px; --y: -78px; --mx: -98px; --my: -28px; --d: 210ms"></span>
+          <span style="--x: 178px; --y: -58px; --mx: 96px; --my: -20px; --d: 160ms"></span>
+          <span style="--x: -148px; --y: 104px; --mx: -70px; --my: 46px; --d: 260ms"></span>
+          <span style="--x: 152px; --y: 96px; --mx: 76px; --my: 36px; --d: 80ms"></span>
+          <span style="--x: -68px; --y: -188px; --mx: -26px; --my: -92px; --d: 320ms"></span>
+          <span style="--x: 58px; --y: 164px; --mx: 22px; --my: 78px; --d: 190ms"></span>
+          <span style="--x: -24px; --y: -250px; --mx: -8px; --my: -126px; --d: 420ms"></span>
+          <span style="--x: 22px; --y: 220px; --mx: 10px; --my: 104px; --d: 370ms"></span>
+        </div>
+
+        <div class="splash-flow" aria-hidden="true">
+          <span style="--r: -31deg; --y: -118px; --d: 380ms"></span>
+          <span style="--r: 23deg; --y: -66px; --d: 520ms"></span>
+          <span style="--r: -9deg; --y: 6px; --d: 610ms"></span>
+          <span style="--r: 37deg; --y: 72px; --d: 470ms"></span>
+        </div>
+
+        <div class="splash-fragments" aria-hidden="true">
+          <span class="splash-fragment fragment-card" style="--sx: -150px; --sy: -132px; --ex: -60px; --ey: -44px; --delay: 0ms"><i>语音</i></span>
+          <span class="splash-fragment fragment-card fragment-card-wide" style="--sx: 145px; --sy: -118px; --ex: 54px; --ey: -42px; --delay: 90ms"><i>灵感</i></span>
+          <span class="splash-fragment fragment-tag" style="--sx: -148px; --sy: 24px; --ex: -64px; --ey: 8px; --delay: 160ms"><i>#待办</i></span>
+          <span class="splash-fragment fragment-wave" style="--sx: 145px; --sy: 18px; --ex: 62px; --ey: 8px; --delay: 220ms"><i></i></span>
+          <span class="splash-fragment fragment-dot" style="--sx: -118px; --sy: 142px; --ex: -42px; --ey: 52px; --delay: 280ms"></span>
+          <span class="splash-fragment fragment-card fragment-card-small" style="--sx: 124px; --sy: 136px; --ex: 42px; --ey: 48px; --delay: 340ms"><i>文本</i></span>
+          <span class="splash-fragment fragment-node" style="--sx: -22px; --sy: -212px; --ex: -12px; --ey: -70px; --delay: 410ms"></span>
+          <span class="splash-fragment fragment-node fragment-node-alt" style="--sx: 18px; --sy: 196px; --ex: 16px; --ey: 70px; --delay: 480ms"></span>
+        </div>
+
+        <div class="splash-origin" aria-hidden="true"></div>
+
+        <div class="splash-core" aria-hidden="true">
+          <span class="core-ring core-ring-one"></span>
+          <span class="core-ring core-ring-two"></span>
+          <span class="core-ring core-ring-three"></span>
+          <span class="core-node"></span>
+          <span class="core-dot core-dot-one"></span>
+          <span class="core-dot core-dot-two"></span>
+          <span class="core-dot core-dot-three"></span>
+        </div>
+
+        <div class="splash-brand">
+          <span class="splash-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <path class="splash-logo-cloud" d="M21.5 36.5h23.2c5.4 0 9.8-4.1 9.8-9.2 0-4.9-4.1-8.9-9.2-9.2C43 11.7 36.8 7.5 29.8 7.5c-8 0-14.6 5.4-16 12.5C8.9 21 5.5 25 5.5 29.7c0 4.8 3.6 6.8 8.2 6.8" />
+              <path class="splash-logo-line" d="M18 42h26M24 48h19M18 54h13" />
+              <circle cx="18" cy="42" r="2.2" />
+              <circle cx="24" cy="48" r="2.2" />
+              <circle cx="18" cy="54" r="2.2" />
+            </svg>
+          </span>
+          <p>AI 记忆系统</p>
+        </div>
+      </section>
+
+      <main id="app" class="app-view" aria-live="polite"></main>
+
+      <nav class="bottom-nav" aria-label="底部导航">
+        <button class="nav-item is-active" type="button" data-tab="home" aria-label="首页">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.8 12 3l9 7.8v8.7a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 19.5z" />
+          </svg>
+          <span>首页</span>
+        </button>
+        <button class="nav-item" type="button" data-tab="capsule" aria-label="记忆舱">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 6.5C5 4.6 8.1 3 12 3s7 1.6 7 3.5v11C19 19.4 15.9 21 12 21s-7-1.6-7-3.5z" />
+            <path d="M5 6.5C5 8.4 8.1 10 12 10s7-1.6 7-3.5M5 12c0 1.9 3.1 3.5 7 3.5s7-1.6 7-3.5" />
+          </svg>
+          <span>记忆舱</span>
+        </button>
+        <button class="nav-item" type="button" data-tab="profile" aria-label="我的">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4z" />
+            <path d="M4.5 20.4c1.2-3.5 4-5.4 7.5-5.4s6.3 1.9 7.5 5.4" />
+          </svg>
+          <span>我的</span>
+        </button>
+      </nav>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
