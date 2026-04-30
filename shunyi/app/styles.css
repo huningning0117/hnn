@@ -1089,6 +1089,112 @@ input {
   font-size: 12px;
 }
 
+.backend-status {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin-top: 10px;
+  padding: 10px 11px;
+  border: 1px solid rgba(105, 215, 255, 0.22);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(248, 251, 255, 0.9);
+}
+
+.backend-status-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 14px rgba(105, 215, 255, 0.72);
+}
+
+.backend-status strong,
+.backend-status small {
+  display: block;
+}
+
+.backend-status strong {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.backend-status small {
+  margin-top: 3px;
+  color: rgba(248, 251, 255, 0.58);
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.backend-status-connecting .backend-status-dot {
+  animation: stepBlink 860ms ease-in-out infinite;
+}
+
+.backend-status-success {
+  border-color: rgba(126, 240, 193, 0.28);
+  background: rgba(126, 240, 193, 0.1);
+}
+
+.backend-status-success .backend-status-dot {
+  background: var(--mint);
+  box-shadow: 0 0 14px rgba(126, 240, 193, 0.74);
+}
+
+.backend-status-error {
+  border-color: rgba(255, 195, 92, 0.38);
+  background: rgba(255, 195, 92, 0.12);
+}
+
+.backend-status-error .backend-status-dot {
+  background: #ffc35c;
+  box-shadow: 0 0 14px rgba(255, 195, 92, 0.72);
+}
+
+.backend-diagnostic {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.backend-test-btn {
+  justify-self: start;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--pill-radius);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(248, 251, 255, 0.86);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.backend-test-btn:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.backend-diagnostic-output {
+  max-height: 220px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(5, 12, 32, 0.46);
+  color: rgba(248, 251, 255, 0.82);
+  font: 10px/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .meeting-progress {
   position: relative;
   z-index: 1;

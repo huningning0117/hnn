@@ -1,3 +1,6 @@
+const API_BASE_URL = "http://10.251.68.156:3000";
+const MEETING_MOCK_URL = `${API_BASE_URL}/api/meeting/mock`;
+
 const typeConfig = {
   voice: { label: "语音", icon: "mic", tone: "语音转写" },
   text: { label: "文字", icon: "edit", tone: "手动记录" },
@@ -133,7 +136,13 @@ const state = {
   meeting: {
     status: "idle",
     progress: 0,
-    resultId: ""
+    resultId: "",
+    backendStatus: "idle",
+    backendDetail: "",
+    diagnostic: {
+      status: "idle",
+      output: ""
+    }
   }
 };
 
@@ -198,21 +207,94 @@ function formatCurrentTime() {
   return `${hour}:${minute}`;
 }
 
-function createMeetingMemory() {
-  const time = formatCurrentTime();
+function pickTextValue(value, fallback) {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function normalizeMeetingList(value, fallback) {
+  if (!Array.isArray(value) || value.length === 0) {
+    return [...fallback];
+  }
+
+  const normalized = value
+    .map((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      }
+
+      if (item && typeof item.text === "string") {
+        return item.text.trim();
+      }
+
+      return "";
+    })
+    .filter(Boolean);
+
+  return normalized.length > 0 ? normalized : [...fallback];
+}
+
+function normalizeMeetingImportance(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return 96;
+  }
+
+  return numericValue <= 10 ? Math.round(numericValue * 10) : Math.round(numericValue);
+}
+
+function getBackendErrorMessage(error) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Network request failed";
+}
+
+function formatErrorDetail(error) {
+  const name = error instanceof Error && error.name ? error.name : typeof error;
+  const message = error instanceof Error && error.message ? error.message : String(error);
+  const stack = error instanceof Error && error.stack ? error.stack : "";
+
+  return [
+    `error.name: ${name}`,
+    `error.message: ${message}`,
+    stack ? `error.stack: ${stack}` : "error.stack: "
+  ].join("\n");
+}
+
+async function readResponseText(response) {
+  try {
+    const text = await response.text();
+    return text.length > 500 ? `${text.slice(0, 500)}...` : text;
+  } catch (error) {
+    return `读取响应失败\n${formatErrorDetail(error)}`;
+  }
+}
+
+function createMeetingMemory(meetingResult = mockMeetingContent) {
+  const time = pickTextValue(meetingResult.time, formatCurrentTime());
+  const aiContent = pickTextValue(
+    meetingResult.aiContent,
+    pickTextValue(
+      meetingResult.aiSummary,
+      pickTextValue(meetingResult.summary, mockMeetingContent.summary)
+    )
+  );
+
   return {
-    id: `meeting-${Date.now()}`,
+    id: pickTextValue(meetingResult.id, `meeting-${Date.now()}`),
     type: "meeting",
-    title: "ESP32 会议整理结果",
-    rawContent: mockMeetingContent.rawContent,
-    aiContent: mockMeetingContent.summary,
-    keyPoints: [...mockMeetingContent.keyPoints],
-    todos: [...mockMeetingContent.todos],
-    tag: [...mockMeetingContent.tags],
+    title: pickTextValue(meetingResult.title, "ESP32 会议整理结果"),
+    rawContent: pickTextValue(meetingResult.rawContent, mockMeetingContent.rawContent),
+    aiContent,
+    keyPoints: normalizeMeetingList(meetingResult.keyPoints, mockMeetingContent.keyPoints),
+    todos: normalizeMeetingList(meetingResult.todos, mockMeetingContent.todos),
+    tag: normalizeMeetingList(meetingResult.tag || meetingResult.tags, mockMeetingContent.tags),
     time,
-    location: "演示现场",
-    source: "ESP32 硬件采集",
-    importance: 96
+    location: pickTextValue(meetingResult.location, "演示现场"),
+    source: pickTextValue(meetingResult.source, "ESP32 硬件采集"),
+    importance: normalizeMeetingImportance(meetingResult.importance)
   };
 }
 
@@ -228,8 +310,84 @@ function setMeetingStatus(status) {
   render();
 }
 
-function completeMeetingRecord() {
-  const meetingMemory = createMeetingMemory();
+function setBackendStatus(status, detail = "") {
+  state.meeting.backendStatus = status;
+  state.meeting.backendDetail = detail;
+  render();
+}
+
+async function requestMeetingMock() {
+  console.log("正在请求后端");
+
+  const response = await fetch(MEETING_MOCK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    throw new Error(`Backend request failed with status ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("后端请求成功");
+  return result;
+}
+
+function setDiagnosticOutput(status, output) {
+  state.meeting.diagnostic = { status, output };
+  render();
+}
+
+async function runDiagnosticRequest(label, url, options) {
+  const lines = [`${label}: 请求中`];
+
+  try {
+    const response = await fetch(url, options);
+    const text = await readResponseText(response);
+
+    lines[0] = `${label}: ${response.ok ? "成功" : "失败"}`;
+    lines.push(`status: ${response.status} ${response.statusText}`);
+
+    if (text) {
+      lines.push(`response: ${text}`);
+    }
+  } catch (error) {
+    lines[0] = `${label}: 失败`;
+    lines.push(formatErrorDetail(error));
+  }
+
+  return lines.join("\n");
+}
+
+async function runBackendDiagnostics() {
+  if (state.meeting.diagnostic.status === "running") {
+    return;
+  }
+
+  setDiagnosticOutput("running", `当前 API_BASE_URL: ${API_BASE_URL}\n正在执行后端连接诊断...`);
+
+  const lines = [`当前 API_BASE_URL: ${API_BASE_URL}`, ""];
+
+  lines.push(await runDiagnosticRequest("GET /api/status", `${API_BASE_URL}/api/status`, {
+    method: "GET"
+  }));
+  lines.push("");
+  lines.push(await runDiagnosticRequest("POST /api/meeting/mock", MEETING_MOCK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  }));
+
+  setDiagnosticOutput("complete", lines.join("\n"));
+}
+
+function completeMeetingRecord(meetingResult = mockMeetingContent) {
+  const meetingMemory = createMeetingMemory(meetingResult);
   mockMemories.unshift(meetingMemory);
   state.meeting.status = "complete";
   state.meeting.progress = 100;
@@ -239,22 +397,43 @@ function completeMeetingRecord() {
   showToast("已保存到记忆舱");
 }
 
-function startMeetingRecord() {
+async function startMeetingRecord() {
   if (state.meeting.status === "hardware" || state.meeting.status === "ai") {
     return;
   }
 
   clearMeetingTimers();
   state.meeting.resultId = "";
+  state.meeting.backendStatus = "connecting";
+  state.meeting.backendDetail = "";
   setMeetingStatus("hardware");
 
   meetingTimerIds = [
-    window.setTimeout(() => setMeetingStatus("ai"), 1300),
-    window.setTimeout(() => {
-      completeMeetingRecord();
-      clearMeetingTimers();
-    }, 2800)
+    window.setTimeout(() => setMeetingStatus("ai"), 1300)
   ];
+
+  let meetingResult;
+
+  try {
+    meetingResult = await requestMeetingMock();
+    setBackendStatus("success");
+  } catch (error) {
+    console.log("后端请求失败，使用本地 mock");
+    console.error(error);
+    setBackendStatus("error", getBackendErrorMessage(error));
+    meetingResult = mockMeetingContent;
+  }
+
+  if (state.meeting.status === "hardware") {
+    setMeetingStatus("ai");
+  }
+
+  meetingTimerIds.push(
+    window.setTimeout(() => {
+      completeMeetingRecord(meetingResult);
+      clearMeetingTimers();
+    }, 700)
+  );
 }
 
 function render() {
@@ -392,6 +571,9 @@ function renderMeetingRecorder() {
         </span>
       </button>
 
+      ${renderBackendStatus()}
+      ${renderBackendDiagnostic()}
+
       <div class="meeting-progress" aria-label="会议记录进度">
         <span style="width: ${state.meeting.progress}%"></span>
       </div>
@@ -428,6 +610,44 @@ function renderMeetingRecorder() {
         </div>
       ` : ""}
     </section>
+  `;
+}
+
+function renderBackendDiagnostic() {
+  const diagnostic = state.meeting.diagnostic;
+  const isRunning = diagnostic.status === "running";
+
+  return `
+    <div class="backend-diagnostic">
+      <button class="backend-test-btn" type="button" data-backend-test ${isRunning ? "disabled" : ""}>
+        ${isRunning ? "正在测试后端连接" : "测试后端连接"}
+      </button>
+      ${diagnostic.output ? `<pre class="backend-diagnostic-output">${escapeHtml(diagnostic.output)}</pre>` : ""}
+    </div>
+  `;
+}
+
+function renderBackendStatus() {
+  const status = state.meeting.backendStatus;
+
+  if (status === "idle") {
+    return "";
+  }
+
+  const statusText = {
+    connecting: "正在连接后端服务",
+    success: "后端服务已连接",
+    error: "后端连接失败，已使用本地演示数据"
+  }[status];
+
+  return `
+    <div class="backend-status backend-status-${escapeHtml(status)}" role="status" aria-live="polite">
+      <span class="backend-status-dot" aria-hidden="true"></span>
+      <div>
+        <strong>${escapeHtml(statusText)}</strong>
+        ${state.meeting.backendDetail ? `<small>${escapeHtml(state.meeting.backendDetail)}</small>` : ""}
+      </div>
+    </div>
   `;
 }
 
@@ -943,6 +1163,12 @@ app.addEventListener("click", (event) => {
   const meetingStartButton = event.target.closest("[data-meeting-start]");
   if (meetingStartButton) {
     startMeetingRecord();
+    return;
+  }
+
+  const backendTestButton = event.target.closest("[data-backend-test]");
+  if (backendTestButton) {
+    runBackendDiagnostics();
     return;
   }
 
