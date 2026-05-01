@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>瞬忆后端控制台</title>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <style id="dashboard-fallback-style">
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: #f8fbff;
+        background: radial-gradient(circle at top left, #122b5f 0%, #08152d 45%, #050b18 100%);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .icon-sprite {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
+
+      .stat-icon svg,
+      .chip-icon,
+      .status-chip svg,
+      .action-button svg,
+      .primary-button svg {
+        width: 24px;
+        height: 24px;
+      }
+    </style>
+    <link rel="stylesheet" href="/dashboard/dashboard.css?v=force-dark-1" />
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true">
+      <symbol id="icon-server" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="6" rx="2"></rect>
+        <rect x="4" y="14" width="16" height="6" rx="2"></rect>
+        <path d="M8 7h.01M8 17h.01M12 7h4M12 17h4"></path>
+      </symbol>
+      <symbol id="icon-activity" viewBox="0 0 24 24">
+        <path d="M3 12h4l3-8 4 16 3-8h4"></path>
+      </symbol>
+      <symbol id="icon-memory" viewBox="0 0 24 24">
+        <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+        <path d="M9 8h6M9 12h6M9 16h4"></path>
+      </symbol>
+      <symbol id="icon-ai" viewBox="0 0 24 24">
+        <path d="M12 3v4M12 17v4M3 12h4M17 12h4"></path>
+        <circle cx="12" cy="12" r="5"></circle>
+        <path d="M9.8 12h4.4M12 9.8v4.4"></path>
+      </symbol>
+      <symbol id="icon-phone" viewBox="0 0 24 24">
+        <rect x="7" y="3" width="10" height="18" rx="2"></rect>
+        <path d="M11 18h2"></path>
+      </symbol>
+      <symbol id="icon-cpu" viewBox="0 0 24 24">
+        <rect x="7" y="7" width="10" height="10" rx="2"></rect>
+        <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"></path>
+      </symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24">
+        <path d="m4 12 16-8-5 16-3-6-8-2Z"></path>
+        <path d="m12 14 8-10"></path>
+      </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24">
+        <path d="M20 6 9 17l-5-5"></path>
+      </symbol>
+    </svg>
+
+    <div class="dashboard-bg" aria-hidden="true">
+      <div class="grid-overlay"></div>
+      <div class="flow-ribbon"></div>
+    </div>
+
+    <div class="shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <h1>瞬忆后端控制台</h1>
+          <p class="subtitle">APP、AI 后端与 ESP32 采集终端的实时联动监控中心</p>
+          <div class="endpoint-strip" aria-label="服务地址">
+            <span>Local http://localhost:3000</span>
+            <span>LAN http://10.251.68.156:3000</span>
+          </div>
+        </div>
+
+        <aside class="hero-status-card" aria-label="服务状态">
+          <div class="status-orbit">
+            <span class="pulse"></span>
+            <strong id="serviceStatusText">在线</strong>
+          </div>
+          <div class="hero-status-grid">
+            <div class="status-chip online">
+              <span class="status-dot"></span>
+              <strong>在线</strong>
+              <small>Node.js 后端</small>
+            </div>
+            <div class="status-chip">
+              <svg class="chip-icon"><use href="#icon-ai"></use></svg>
+              <strong id="heroAiMode">Mock AI</strong>
+              <small>AI 模式</small>
+            </div>
+            <div class="status-chip pending">
+              <svg class="chip-icon"><use href="#icon-cpu"></use></svg>
+              <strong id="heroEsp32State">ESP32 待接入</strong>
+              <small>硬件终端</small>
+            </div>
+          </div>
+          <div class="runtime-line">
+            <span>运行时长</span>
+            <strong id="uptime">--</strong>
+          </div>
+        </aside>
+      </header>
+
+      <div class="alert" id="alertBox" role="status" aria-live="polite"></div>
+
+      <main class="dashboard-grid">
+        <section class="stat-grid span-12" aria-label="服务状态卡片">
+          <article class="stat-card accent-cyan">
+            <div class="stat-icon"><svg><use href="#icon-server"></use></svg></div>
+            <div>
+              <span>后端服务</span>
+              <strong id="backendState">在线</strong>
+              <small>Express 服务正在监听 3000 端口</small>
+            </div>
+          </article>
+          <article class="stat-card accent-blue">
+            <div class="stat-icon"><svg><use href="#icon-activity"></use></svg></div>
+            <div>
+              <span>今日请求数</span>
+              <strong id="todayRequestCount">0</strong>
+              <small>基于最近 100 条内存日志统计</small>
+            </div>
+          </article>
+          <article class="stat-card accent-purple">
+            <div class="stat-icon"><svg><use href="#icon-memory"></use></svg></div>
+            <div>
+              <span>最近会议记录</span>
+              <strong id="latestMeetingMetric">等待同步</strong>
+              <small id="latestMeetingSub">同步 /api/meeting/latest</small>
+            </div>
+          </article>
+          <article class="stat-card accent-violet">
+            <div class="stat-icon"><svg><use href="#icon-ai"></use></svg></div>
+            <div>
+              <span>AI 模式</span>
+              <strong id="aiMode">Mock AI</strong>
+              <small>不展示、不写入任何真实 API Key</small>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel app-state-panel span-12">
+          <div class="panel-heading">
+            <div>
+              <h2>APP 真实状态</h2>
+            </div>
+            <span class="mini-badge" id="appStateUpdatedAt">等待同步</span>
+          </div>
+          <div class="device-grid app-state-grid">
+            <div class="device-tile">
+              <span>paused</span>
+              <strong id="dashboardPaused">--</strong>
+            </div>
+            <div class="device-tile">
+              <span>encryptionEnabled</span>
+              <strong id="dashboardEncryption">--</strong>
+            </div>
+            <div class="device-tile">
+              <span>lowPowerMode</span>
+              <strong id="dashboardLowPower">--</strong>
+            </div>
+            <div class="device-tile">
+              <span>privacyMode</span>
+              <strong id="dashboardPrivacy">--</strong>
+            </div>
+            <div class="device-tile">
+              <span>memories.length</span>
+              <strong id="dashboardMemoryCount">0</strong>
+            </div>
+            <div class="device-tile wide">
+              <span>lastAction</span>
+              <strong id="dashboardLastAction">--</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel actions-panel span-5">
+          <div class="panel-heading">
+            <div>
+              <h2>接口测试</h2>
+            </div>
+            <span class="mini-badge" id="lastSync">等待同步</span>
+          </div>
+          <div class="button-grid">
+            <button class="action-button" data-action="status" type="button">
+              <svg><use href="#icon-activity"></use></svg>
+              <span>测试服务状态</span>
+            </button>
+            <button class="action-button" data-action="mock" type="button">
+              <svg><use href="#icon-ai"></use></svg>
+              <span>生成 Mock 会议</span>
+            </button>
+            <button class="action-button" data-action="latest" type="button">
+              <svg><use href="#icon-memory"></use></svg>
+              <span>获取最近会议</span>
+            </button>
+            <button class="action-button" data-action="sampleText" type="button">
+              <svg><use href="#icon-send"></use></svg>
+              <span>发送测试文本</span>
+            </button>
+          </div>
+          <pre class="response-box" id="apiResponse">等待接口测试结果</pre>
+        </section>
+
+        <section class="panel activity-panel span-7">
+          <div class="panel-heading">
+            <div>
+              <h2>用户行为流</h2>
+            </div>
+            <span class="mini-badge" id="activityCount">0 / 100</span>
+          </div>
+          <div class="activity-stream" id="activityStream">
+            <p class="activity-empty">暂无用户行为</p>
+          </div>
+        </section>
+
+        <section class="panel text-panel span-12">
+          <div class="panel-heading">
+            <div>
+              <h2>会议文本测试</h2>
+            </div>
+            <button class="primary-button" id="submitText" type="button">
+              <svg><use href="#icon-send"></use></svg>
+              <span>AI 整理测试</span>
+            </button>
+          </div>
+          <textarea id="meetingText" spellcheck="false">今天讨论瞬忆项目后端 Dashboard、ESP32 麦克风采集终端、技能节演示流程和 AI 会议纪要输出。需要确认接口稳定、页面展示清晰，并准备一段可用于现场演示的会议文本。</textarea>
+        </section>
+
+        <section class="panel latest-panel span-12">
+          <div class="panel-heading">
+            <div>
+              <h2>最近会议结果</h2>
+            </div>
+            <div class="heading-actions">
+              <span class="mini-badge">字段对应 APP 记忆舱</span>
+              <button class="ghost-button" id="refreshLatest" type="button">刷新</button>
+            </div>
+          </div>
+          <div class="meeting-card" id="latestMeeting">
+            <p class="empty">暂无会议结果</p>
+          </div>
+        </section>
+
+        <section class="panel device-panel span-12">
+          <div class="panel-heading">
+            <div>
+              <h2>ESP32 设备状态</h2>
+            </div>
+            <span class="mini-badge muted" id="esp32State">待接入</span>
+          </div>
+          <div class="device-layout">
+            <div class="device-grid">
+              <div class="device-tile">
+                <span>当前状态</span>
+                <strong>待接入</strong>
+              </div>
+              <div class="device-tile">
+                <span>麦克风</span>
+                <strong>待测试</strong>
+              </div>
+              <div class="device-tile">
+                <span>Wi-Fi</span>
+                <strong>待连接</strong>
+              </div>
+              <div class="device-tile">
+                <span>最近上传</span>
+                <strong>暂无</strong>
+              </div>
+              <div class="device-tile wide">
+                <span>预留接口</span>
+                <strong>/api/meeting/text</strong>
+              </div>
+            </div>
+
+            <div class="hardware-flow">
+              <span>硬件接入流程</span>
+              <div>ESP32 连接 Wi-Fi</div>
+              <div>请求后端</div>
+              <div>上传会议文本</div>
+              <div>APP 显示结果</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel logs-panel span-12">
+          <div class="panel-heading">
+            <div>
+              <h2>请求日志</h2>
+            </div>
+            <span class="mini-badge" id="logCount">0 / 100</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>方法</th>
+                  <th>路径</th>
+                  <th>状态码</th>
+                  <th>耗时</th>
+                  <th>来源</th>
+                </tr>
+              </thead>
+              <tbody id="logRows">
+                <tr>
+                  <td colspan="6">正在读取请求日志</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/dashboard/dashboard.js?v=force-dark-1" defer></script>
+  </body>
+</html>
