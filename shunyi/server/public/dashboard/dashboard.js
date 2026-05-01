@@ -27,6 +27,9 @@ const dashboardPrivacy = document.querySelector("#dashboardPrivacy");
 const dashboardMemoryCount = document.querySelector("#dashboardMemoryCount");
 const dashboardLastAction = document.querySelector("#dashboardLastAction");
 const appStateUpdatedAt = document.querySelector("#appStateUpdatedAt");
+const memoryList = document.querySelector("#memoryList");
+const memoryListCount = document.querySelector("#memoryListCount");
+const refreshMemoryList = document.querySelector("#refreshMemoryList");
 
 let serverUptimeBase = 0;
 let serverUptimeSyncedAt = Date.now();
@@ -682,6 +685,181 @@ function formatBoolean(value) {
   return value ? "true" : "false";
 }
 
+function formatFieldValue(value, fallback = "--") {
+  if (typeof value === "string") {
+    return getTextValue(value, fallback);
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  if (typeof value === "boolean") {
+    return formatBoolean(value);
+  }
+
+  return fallback;
+}
+
+function normalizeTagLabels(tags) {
+  return normalizeList(tags)
+    .map((tag) => {
+      if (typeof tag === "string") {
+        return tag.trim();
+      }
+
+      return getTextValue(tag?.text || tag?.name || tag?.label, "");
+    })
+    .filter(Boolean);
+}
+
+function createMemoryMetaItem(fieldName, value) {
+  const item = document.createElement("span");
+  item.className = "memory-meta-item";
+  appendFieldCode(item, fieldName, value);
+  return item;
+}
+
+function createMemoryDataField(fieldName, label, value, variant) {
+  const block = document.createElement("div");
+  block.className = `memory-data-field ${variant}`;
+
+  const title = document.createElement("span");
+  title.className = "content-label";
+  appendFieldCode(title, fieldName, label);
+
+  const text = document.createElement("p");
+  text.textContent = formatFieldValue(value);
+
+  block.append(title, text);
+  return block;
+}
+
+function createMemoryTagsRow(tags) {
+  const row = document.createElement("div");
+  row.className = "memory-tags-row";
+
+  const label = document.createElement("span");
+  label.className = "content-label";
+  appendFieldCode(label, "tags", "标签");
+  row.append(label);
+
+  if (tags.length === 0) {
+    const empty = document.createElement("span");
+    empty.className = "chip";
+    empty.textContent = "--";
+    row.append(empty);
+    return row;
+  }
+
+  tags.forEach((tag) => {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = tag;
+    row.append(chip);
+  });
+
+  return row;
+}
+
+function createMemoryDataCard(memory, index) {
+  const tags = normalizeTagLabels(memory.tags || memory.tag);
+  const card = document.createElement("article");
+  card.className = "memory-data-card";
+
+  if (index === 0) {
+    card.classList.add("is-latest");
+  }
+
+  const head = document.createElement("div");
+  head.className = "memory-data-head";
+
+  const titleWrap = document.createElement("div");
+  titleWrap.className = "memory-data-title-wrap";
+
+  const sourcePill = document.createElement("span");
+  sourcePill.className = "source-pill";
+  appendFieldCode(sourcePill, "source", formatFieldValue(memory.source));
+
+  const title = document.createElement("h3");
+  title.className = "memory-data-title";
+  appendFieldCode(title, "title", formatFieldValue(memory.title, "未命名记忆"));
+
+  titleWrap.append(sourcePill, title);
+
+  const archived = document.createElement("span");
+  archived.className = `archive-pill ${memory.archived ? "is-archived" : ""}`;
+  appendFieldCode(archived, "archived", formatBoolean(Boolean(memory.archived)));
+
+  head.append(titleWrap, archived);
+
+  const meta = document.createElement("div");
+  meta.className = "memory-meta-grid";
+  [
+    ["type", formatFieldValue(memory.type)],
+    ["category", formatFieldValue(memory.category)],
+    ["time", formatFieldValue(memory.time)],
+    ["importance", `${formatImportance(memory.importance)}/10`],
+  ].forEach(([fieldName, value]) => {
+    meta.append(createMemoryMetaItem(fieldName, value));
+  });
+
+  const content = document.createElement("div");
+  content.className = "memory-data-content";
+  content.append(
+    createMemoryDataField("rawContent", "原始内容", memory.rawContent || memory.content, "raw"),
+    createMemoryDataField(
+      "aiSummary",
+      "AI 摘要",
+      memory.aiSummary || memory.aiContent || memory.summary,
+      "summary",
+    ),
+  );
+
+  card.append(head, meta, content, createMemoryTagsRow(tags));
+  return card;
+}
+
+function renderMemoryList(memories) {
+  if (!memoryList || !memoryListCount) {
+    return;
+  }
+
+  const entries = Array.isArray(memories) ? memories : [];
+  const visibleEntries = entries.slice(0, 20);
+  memoryList.textContent = "";
+
+  if (entries.length === 0) {
+    memoryListCount.textContent = "0 条";
+    const empty = document.createElement("p");
+    empty.className = "memory-list-empty";
+    empty.textContent = "暂无后端记忆数据，请先在手机 APP 中保存记录。";
+    memoryList.append(empty);
+    return;
+  }
+
+  memoryListCount.textContent =
+    entries.length > 20 ? `最近 20 / 共 ${entries.length} 条` : `${entries.length} 条`;
+
+  visibleEntries.forEach((memory, index) => {
+    memoryList.append(createMemoryDataCard(memory, index));
+  });
+}
+
+function renderMemoryListError(message) {
+  if (!memoryList || !memoryListCount) {
+    return;
+  }
+
+  memoryList.textContent = "";
+  memoryListCount.textContent = "同步失败";
+
+  const empty = document.createElement("p");
+  empty.className = "memory-list-empty is-error";
+  empty.textContent = `读取后端记忆数据失败：${message}`;
+  memoryList.append(empty);
+}
+
 async function loadAppRuntime() {
   try {
     const [appState, memoryPayload] = await Promise.all([
@@ -697,6 +875,7 @@ async function loadAppRuntime() {
     dashboardMemoryCount.textContent = memories.length;
     dashboardLastAction.textContent = getTextValue(appState.lastAction, "--");
     appStateUpdatedAt.textContent = getTextValue(appState.updatedAt, "已同步");
+    renderMemoryList(memories);
 
     return { appState, memories };
   } catch (error) {
@@ -705,6 +884,7 @@ async function loadAppRuntime() {
     dashboardLowPower.textContent = "异常";
     dashboardPrivacy.textContent = "异常";
     appStateUpdatedAt.textContent = "同步失败";
+    renderMemoryListError(error.message);
     showAlert(`读取 APP 真实状态失败：${error.message}`, "error");
     throw error;
   }
@@ -868,6 +1048,20 @@ async function bootstrap() {
       setBusy(refreshLatest, false);
     }
   });
+
+  if (refreshMemoryList) {
+    refreshMemoryList.addEventListener("click", async () => {
+      setBusy(refreshMemoryList, true);
+      try {
+        await loadAppRuntime();
+        showAlert("记忆列表已刷新");
+      } catch (error) {
+        showAlert(`刷新记忆列表失败：${error.message}`, "error");
+      } finally {
+        setBusy(refreshMemoryList, false);
+      }
+    });
+  }
 
   await Promise.allSettled([loadStatus(), loadLatest(), loadLogs(), loadActivityEvents(), loadAppRuntime()]);
   window.setInterval(loadAppRuntime, 3000);
