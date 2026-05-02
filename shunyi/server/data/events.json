@@ -1,0 +1,695 @@
+[
+  {
+    "id": "event-28",
+    "time": "2026/05/02 18:46:08",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-29",
+    "time": "2026/05/02 18:46:08",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-30",
+    "time": "2026/05/02 18:46:11",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-31",
+    "time": "2026/05/02 18:46:11",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-32",
+    "time": "2026/05/02 18:46:11",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-33",
+    "time": "2026/05/02 18:46:11",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-34",
+    "time": "2026/05/02 18:46:14",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-35",
+    "time": "2026/05/02 18:46:14",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-36",
+    "time": "2026/05/02 18:46:17",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-37",
+    "time": "2026/05/02 18:46:17",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-38",
+    "time": "2026/05/02 18:46:20",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-39",
+    "time": "2026/05/02 18:46:20",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-40",
+    "time": "2026/05/02 18:46:20",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-41",
+    "time": "2026/05/02 18:46:20",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-42",
+    "time": "2026/05/02 18:46:23",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-43",
+    "time": "2026/05/02 18:46:23",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-44",
+    "time": "2026/05/02 18:46:26",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-45",
+    "time": "2026/05/02 18:46:26",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-46",
+    "time": "2026/05/02 18:46:29",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-47",
+    "time": "2026/05/02 18:46:29",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-48",
+    "time": "2026/05/02 18:46:32",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-49",
+    "time": "2026/05/02 18:46:32",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-50",
+    "time": "2026/05/02 18:46:35",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-51",
+    "time": "2026/05/02 18:46:35",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-52",
+    "time": "2026/05/02 18:46:39",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-53",
+    "time": "2026/05/02 18:46:39",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-54",
+    "time": "2026/05/02 18:46:41",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-55",
+    "time": "2026/05/02 18:46:41",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-56",
+    "time": "2026/05/02 18:46:42",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-57",
+    "time": "2026/05/02 18:46:42",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-58",
+    "time": "2026/05/02 18:46:44",
+    "event": "start_meeting_click",
+    "source": "android_app"
+  },
+  {
+    "id": "event-59",
+    "time": "2026/05/02 18:46:45",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-60",
+    "time": "2026/05/02 18:46:45",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-61",
+    "time": "2026/05/02 18:46:48",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-62",
+    "time": "2026/05/02 18:46:48",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-63",
+    "time": "2026/05/02 18:46:51",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-64",
+    "time": "2026/05/02 18:46:51",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-65",
+    "time": "2026/05/02 18:46:52",
+    "event": "settings_pause_update",
+    "source": "android_app",
+    "detail": "paused=false"
+  },
+  {
+    "id": "event-66",
+    "time": "2026/05/02 18:46:54",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-67",
+    "time": "2026/05/02 18:46:54",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-68",
+    "time": "2026/05/02 18:46:55",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-69",
+    "time": "2026/05/02 18:46:55",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-70",
+    "time": "2026/05/02 18:46:56",
+    "event": "start_meeting_click",
+    "source": "android_app"
+  },
+  {
+    "id": "event-71",
+    "time": "2026/05/02 18:46:56",
+    "event": "request_meeting_start",
+    "source": "android_app"
+  },
+  {
+    "id": "event-72",
+    "time": "2026/05/02 18:46:56",
+    "event": "request_meeting_success",
+    "source": "android_app"
+  },
+  {
+    "id": "event-73",
+    "time": "2026/05/02 18:46:57",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-74",
+    "time": "2026/05/02 18:46:57",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-75",
+    "time": "2026/05/02 18:47:00",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-76",
+    "time": "2026/05/02 18:47:00",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-77",
+    "time": "2026/05/02 18:47:03",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-78",
+    "time": "2026/05/02 18:47:03",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-79",
+    "time": "2026/05/02 18:47:06",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-80",
+    "time": "2026/05/02 18:47:06",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-81",
+    "time": "2026/05/02 18:47:09",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-82",
+    "time": "2026/05/02 18:47:09",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-83",
+    "time": "2026/05/02 18:47:12",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-84",
+    "time": "2026/05/02 18:47:12",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-85",
+    "time": "2026/05/02 18:47:15",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-86",
+    "time": "2026/05/02 18:47:15",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-87",
+    "time": "2026/05/02 18:47:18",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-88",
+    "time": "2026/05/02 18:47:18",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-89",
+    "time": "2026/05/02 18:47:21",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-90",
+    "time": "2026/05/02 18:47:21",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-91",
+    "time": "2026/05/02 18:47:24",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-92",
+    "time": "2026/05/02 18:47:24",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-93",
+    "time": "2026/05/02 18:47:25",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-94",
+    "time": "2026/05/02 18:47:25",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-95",
+    "time": "2026/05/02 18:47:27",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-96",
+    "time": "2026/05/02 18:47:27",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-97",
+    "time": "2026/05/02 18:47:30",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-98",
+    "time": "2026/05/02 18:47:30",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-99",
+    "time": "2026/05/02 18:47:33",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-100",
+    "time": "2026/05/02 18:47:33",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-101",
+    "time": "2026/05/02 18:47:36",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-102",
+    "time": "2026/05/02 18:47:36",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-103",
+    "time": "2026/05/02 18:47:39",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-104",
+    "time": "2026/05/02 18:47:39",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-105",
+    "time": "2026/05/02 18:47:40",
+    "event": "start_meeting_click",
+    "source": "android_app"
+  },
+  {
+    "id": "event-106",
+    "time": "2026/05/02 18:47:40",
+    "event": "request_meeting_start",
+    "source": "android_app"
+  },
+  {
+    "id": "event-107",
+    "time": "2026/05/02 18:47:40",
+    "event": "request_meeting_success",
+    "source": "android_app"
+  },
+  {
+    "id": "event-108",
+    "time": "2026/05/02 18:48:07",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-109",
+    "time": "2026/05/02 18:48:09",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-110",
+    "time": "2026/05/02 18:48:09",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=false, privacyMode=true"
+  },
+  {
+    "id": "event-111",
+    "time": "2026/05/02 18:48:09",
+    "event": "settings_pause_update",
+    "source": "android_app",
+    "detail": "paused=true"
+  },
+  {
+    "id": "event-112",
+    "time": "2026/05/02 18:48:11",
+    "event": "settings_pause_update",
+    "source": "android_app",
+    "detail": "paused=false"
+  },
+  {
+    "id": "event-113",
+    "time": "2026/05/02 18:48:13",
+    "event": "settings_pause_update",
+    "source": "android_app",
+    "detail": "paused=true"
+  },
+  {
+    "id": "event-114",
+    "time": "2026/05/02 18:48:17",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-115",
+    "time": "2026/05/02 18:48:17",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=0"
+  },
+  {
+    "id": "event-116",
+    "time": "2026/05/02 18:48:18",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-117",
+    "time": "2026/05/02 18:48:18",
+    "event": "feature_voice_transcribe",
+    "source": "android_app",
+    "detail": "voice transcribe saved: memoryId=memory-99d871fc-7262-4174-892f-4311488da5b0"
+  },
+  {
+    "id": "event-118",
+    "time": "2026/05/02 18:48:18",
+    "event": "memory_added",
+    "source": "android_app",
+    "detail": "memory added by voice transcribe: id=memory-99d871fc-7262-4174-892f-4311488da5b0, type=voice"
+  },
+  {
+    "id": "event-119",
+    "time": "2026/05/02 18:48:26",
+    "event": "app_state_sync",
+    "source": "server",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-120",
+    "time": "2026/05/02 18:48:26",
+    "event": "memories_sync",
+    "source": "server",
+    "detail": "memories synced: count=1"
+  },
+  {
+    "id": "event-121",
+    "time": "2026/05/02 18:48:27",
+    "event": "feature_ai_polish",
+    "source": "android_app",
+    "detail": "ai polish saved: memoryId=memory-fe1bf6f5-02dc-4192-8ed0-3182516f4d13"
+  },
+  {
+    "id": "event-122",
+    "time": "2026/05/02 18:48:27",
+    "event": "memory_added",
+    "source": "android_app",
+    "detail": "memory added by ai polish: id=memory-fe1bf6f5-02dc-4192-8ed0-3182516f4d13, type=text"
+  },
+  {
+    "id": "event-123",
+    "time": "2026/05/02 18:48:47",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-124",
+    "time": "2026/05/02 18:48:47",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=2"
+  },
+  {
+    "id": "event-125",
+    "time": "2026/05/02 18:48:50",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  },
+  {
+    "id": "event-126",
+    "time": "2026/05/02 18:48:56",
+    "event": "memories_sync",
+    "source": "android_app",
+    "detail": "memories synced: count=2"
+  },
+  {
+    "id": "event-127",
+    "time": "2026/05/02 18:48:56",
+    "event": "app_state_sync",
+    "source": "android_app",
+    "detail": "state synced: paused=true, privacyMode=true"
+  }
+]

@@ -63,7 +63,17 @@ router.delete("/:id", (req, res) => {
 });
 
 router.post("/archive", (req, res) => {
-  const result = archiveMemories();
+  const result = archiveMemories({
+    id: req.body?.id,
+    archived: req.body?.archived,
+  });
+
+  if (result.notFound) {
+    return res.status(404).json({
+      error: "MEMORY_NOT_FOUND",
+      message: "记忆片段不存在",
+    });
+  }
 
   addEvent({
     event: "memories_archived",

@@ -1,0 +1,802 @@
+[
+  {
+    "time": "2026-05-02T10:46:56.020Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:46:56.112Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:46:56.120Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 4,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:46:56.126Z",
+    "method": "POST",
+    "path": "/api/meeting/mock",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:46:56.137Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:46:57.020Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:46:57.026Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 5,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:46:57.027Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:46:58.016Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:00.015Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:00.022Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 7,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:00.023Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:00.036Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:02.024Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:03.018Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:03.019Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:03.020Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:04.019Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:06.020Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:06.021Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:06.022Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:06.027Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:08.029Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:09.019Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:09.027Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 7,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:09.028Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:10.018Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:12.018Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:12.025Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:12.026Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:12.028Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:14.019Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:15.017Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:15.024Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:15.025Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:16.017Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:18.017Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:18.024Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:18.025Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:18.025Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:20.016Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:21.022Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:21.032Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 8,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:21.039Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:22.017Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:22.366Z",
+    "method": "POST",
+    "path": "/api/memories/archive",
+    "statusCode": 404,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:24.016Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:24.018Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:24.024Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:24.024Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:25.328Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:25.334Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 6,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:26.022Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:27.016Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:27.018Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:27.023Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:28.019Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:30.020Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 2,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:30.026Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:30.027Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:30.028Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:32.019Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:33.019Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:33.026Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:33.036Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:34.018Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:36.019Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:36.020Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:36.026Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:36.038Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:47:39.415Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:39.422Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 6,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:40.858Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:40.865Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 6,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:40.877Z",
+    "method": "POST",
+    "path": "/api/meeting/mock",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:40.889Z",
+    "method": "POST",
+    "path": "/api/log/event",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:47.478Z",
+    "method": "POST",
+    "path": "/api/memories/archive",
+    "statusCode": 404,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:47:53.367Z",
+    "method": "POST",
+    "path": "/api/memories/archive",
+    "statusCode": 404,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:07.284Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:09.431Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:09.440Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:09.974Z",
+    "method": "POST",
+    "path": "/api/settings/pause",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:11.980Z",
+    "method": "POST",
+    "path": "/api/settings/pause",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:13.014Z",
+    "method": "POST",
+    "path": "/api/settings/pause",
+    "statusCode": 200,
+    "durationMs": 3,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:17.053Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:17.060Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 6,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:18.906Z",
+    "method": "GET",
+    "path": "/api/status",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "api"
+  },
+  {
+    "time": "2026-05-02T10:48:18.916Z",
+    "method": "POST",
+    "path": "/api/meeting/mock",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "api"
+  },
+  {
+    "time": "2026-05-02T10:48:18.926Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:18.942Z",
+    "method": "POST",
+    "path": "/api/features/voice-transcribe",
+    "statusCode": 200,
+    "durationMs": 3,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:26.321Z",
+    "method": "GET",
+    "path": "/api/log/events",
+    "statusCode": 200,
+    "durationMs": 0,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:48:26.323Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:48:26.352Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 18,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:48:26.353Z",
+    "method": "GET",
+    "path": "/api/server/logs",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "dashboard"
+  },
+  {
+    "time": "2026-05-02T10:48:27.931Z",
+    "method": "POST",
+    "path": "/api/features/ai-polish",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:47.087Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:47.095Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 200,
+    "durationMs": 1,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:50.589Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 2,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:56.564Z",
+    "method": "GET",
+    "path": "/api/memories",
+    "statusCode": 304,
+    "durationMs": 0,
+    "source": "android_app"
+  },
+  {
+    "time": "2026-05-02T10:48:56.571Z",
+    "method": "GET",
+    "path": "/api/app/state",
+    "statusCode": 304,
+    "durationMs": 2,
+    "source": "android_app"
+  }
+]

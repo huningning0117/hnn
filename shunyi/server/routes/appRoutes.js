@@ -3,7 +3,7 @@ import { getAppState, updateAppState } from "../store/appStateStore.js";
 import { addEvent } from "../store/eventLogStore.js";
 
 const router = express.Router();
-const stateKeys = new Set(["paused", "encryptionEnabled", "lowPowerMode", "privacyMode"]);
+const stateKeys = new Set(["paused", "privacyMode"]);
 
 function getEventSource(req) {
   return req.get("x-shunyi-source") === "android_app" ? "android_app" : "server";
@@ -15,7 +15,7 @@ router.get("/state", (req, res) => {
   addEvent({
     event: "app_state_sync",
     source: getEventSource(req),
-    detail: `state synced: paused=${state.paused}, encryptionEnabled=${state.encryptionEnabled}, lowPowerMode=${state.lowPowerMode}, privacyMode=${state.privacyMode}`,
+    detail: `state synced: paused=${state.paused}, privacyMode=${state.privacyMode}`,
   });
 
   res.json(state);

@@ -6,9 +6,7 @@ const MEMORIES_PATH = "/api/memories";
 const DEFAULT_AI_POLISH_TEXT = "那个今天就是我们要弄一下那个 APP，然后硬件那边也要接一下。";
 
 const settingEndpointMap = {
-  pause: "/api/settings/pause",
-  encryption: "/api/settings/encryption",
-  lowPower: "/api/settings/low-power"
+  pause: "/api/settings/pause"
 };
 
 function normalizeApiBaseUrl(url) {
@@ -172,13 +170,12 @@ const state = {
   filter: "all",
   query: "",
   expandedId: "m003",
+  detailMemoryId: "",
   backendOffline: false,
   syncMessage: "",
   activePanel: "",
   appState: {
     paused: false,
-    encryptionEnabled: false,
-    lowPowerMode: false,
     privacyMode: true,
     lastAction: "",
     updatedAt: ""
@@ -236,9 +233,7 @@ const icons = {
   cloud: '<path d="M7 18h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.4-1.8A4.8 4.8 0 0 0 7 18z"/>',
   phone: '<path d="M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M10.5 18h3"/>',
   cpu: '<path d="M8 8h8v8H8z"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/>',
-  lock: '<path d="M7 11V8a5 5 0 0 1 10 0v3"/><path d="M6 11h12v9H6z"/>',
   pause: '<path d="M8 5h3v14H8zM13 5h3v14h-3z"/>',
-  leaf: '<path d="M5 19c9 0 14-5 14-14-7 0-14 4-14 14z"/><path d="M5 19c3-6 7-9 14-14"/>',
   trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>',
   settings: '<path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.8 1.8 0 0 0 .4 2l.1.1-2 3.4-.2-.1a1.8 1.8 0 0 0-2 .4l-.2.2h-4l-.2-.2a1.8 1.8 0 0 0-2-.4l-.2.1-2-3.4.1-.1a1.8 1.8 0 0 0 .4-2 1.8 1.8 0 0 0-1.6-1H5v-4h.9a1.8 1.8 0 0 0 1.6-1 1.8 1.8 0 0 0-.4-2L7 6.9l2-3.4.2.1a1.8 1.8 0 0 0 2-.4l.2-.2h4l.2.2a1.8 1.8 0 0 0 2 .4l.2-.1 2 3.4-.1.1a1.8 1.8 0 0 0-.4 2 1.8 1.8 0 0 0 1.6 1h.9v4h-.9a1.8 1.8 0 0 0-1.5 1z"/>'
 };
@@ -254,6 +249,321 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+const feedbackState = {
+  modalRoot: null,
+  modalTimer: 0,
+  toastRoot: null,
+  toastId: 0,
+  activeType: ""
+};
+
+const feedbackIconPaths = {
+  success: '<path d="m5 12.4 4.2 4.1L19.5 6.5"/>',
+  error: '<path d="M12 4.2 21 19H3z"/><path d="M12 9v4.4M12 16.7h.01"/>',
+  warning: '<path d="M12 4.2 21 19H3z"/><path d="M12 9v4.4M12 16.7h.01"/>',
+  info: '<path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5z"/><path d="M18.5 15.5l.7 2.2 2.3.8-2.3.7-.7 2.3-.8-2.3-2.2-.7 2.2-.8z"/>'
+};
+
+function normalizeFeedbackDetail(detail) {
+  if (!detail) {
+    return "";
+  }
+
+  if (Array.isArray(detail)) {
+    return detail.filter(Boolean).join("\n");
+  }
+
+  if (typeof detail === "object") {
+    try {
+      return JSON.stringify(detail, null, 2);
+    } catch {
+      return String(detail);
+    }
+  }
+
+  return String(detail);
+}
+
+function cleanRequestErrorMessage(error, apiUrl = "") {
+  const rawMessage = error instanceof Error && error.message ? error.message : String(error || "Network request failed");
+  const requestPrefix = apiUrl ? `${apiUrl} 请求失败：` : "";
+
+  if (requestPrefix && rawMessage.startsWith(requestPrefix)) {
+    return rawMessage.slice(requestPrefix.length);
+  }
+
+  return rawMessage.replace(/^https?:\/\/\S+\s+请求失败：/, "");
+}
+
+function formatRequestError(error, apiUrl = "") {
+  const requestUrl = apiUrl || error?.requestUrl || "";
+  const name = error instanceof Error && error.name ? error.name : typeof error;
+  const message = cleanRequestErrorMessage(error, requestUrl);
+  const lowerMessage = message.toLowerCase();
+  const isConnectionError =
+    name === "TypeError" ||
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("network request failed") ||
+    lowerMessage.includes("load failed") ||
+    lowerMessage.includes("networkerror");
+  const detail = [
+    `接口地址：${requestUrl || "未记录"}`,
+    `错误类型：${name || "Error"}`,
+    `错误信息：${message || "Network request failed"}`
+  ];
+  const httpMatch = message.match(/^HTTP\s+(\d+)/i);
+
+  if (httpMatch) {
+    detail.splice(2, 0, `HTTP 状态：${httpMatch[1]}`);
+  }
+
+  if (error?.responseData) {
+    detail.push(`响应数据：${JSON.stringify(error.responseData, null, 2).slice(0, 1200)}`);
+  }
+
+  if (isConnectionError) {
+    return {
+      title: "无法连接本地服务",
+      message: "请确认电脑端后端服务已启动，并且手机与电脑处于同一网络。",
+      detail
+    };
+  }
+
+  return {
+    title: "请求失败",
+    message: "当前操作没有完成，请稍后重试。",
+    detail
+  };
+}
+
+function createFeedbackIcon(type) {
+  const iconNode = document.createElement("div");
+  iconNode.className = `feedback-icon ${type}`;
+  iconNode.setAttribute("aria-hidden", "true");
+
+  if (type === "loading") {
+    iconNode.innerHTML = `
+      <span class="loading-orbit">
+        <span class="loading-pulse"></span>
+      </span>
+      <span class="loading-dot loading-dot-one"></span>
+      <span class="loading-dot loading-dot-two"></span>
+      <span class="loading-dot loading-dot-three"></span>
+    `;
+    return iconNode;
+  }
+
+  iconNode.innerHTML = `
+    <span class="feedback-icon-ring"></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true">${feedbackIconPaths[type] || feedbackIconPaths.info}</svg>
+  `;
+  return iconNode;
+}
+
+function closeFeedback({ immediate = false } = {}) {
+  const root = feedbackState.modalRoot;
+
+  if (!root) {
+    return;
+  }
+
+  window.clearTimeout(feedbackState.modalTimer);
+  feedbackState.modalTimer = 0;
+
+  const removeRoot = () => {
+    if (feedbackState.modalRoot === root) {
+      root.remove();
+      feedbackState.modalRoot = null;
+      feedbackState.activeType = "";
+    }
+  };
+
+  if (immediate) {
+    removeRoot();
+    return;
+  }
+
+  root.querySelector(".feedback-overlay")?.classList.add("is-closing");
+  root.querySelector(".feedback-panel")?.classList.add("is-closing");
+  window.setTimeout(removeRoot, 190);
+}
+
+function showFeedback(options = {}) {
+  const type = options.type || "info";
+  const title = options.title || (type === "loading" ? "正在处理" : "提示");
+  const message = options.message || "";
+  const detailText = normalizeFeedbackDetail(options.detail);
+  const isLoading = type === "loading";
+
+  closeFeedback({ immediate: true });
+
+  const root = document.createElement("div");
+  root.className = "feedback-root";
+
+  const overlay = document.createElement("div");
+  overlay.className = "feedback-overlay";
+
+  const panel = document.createElement("section");
+  panel.className = `feedback-panel ${type}`;
+  panel.setAttribute("role", isLoading ? "status" : "dialog");
+  panel.setAttribute("aria-live", isLoading ? "polite" : "assertive");
+  if (!isLoading) {
+    panel.setAttribute("aria-modal", "true");
+  }
+
+  const glow = document.createElement("div");
+  glow.className = "feedback-glow";
+  glow.setAttribute("aria-hidden", "true");
+
+  const titleNode = document.createElement("h2");
+  titleNode.className = "feedback-title";
+  titleNode.textContent = title;
+
+  const messageNode = document.createElement("p");
+  messageNode.className = "feedback-message";
+  messageNode.textContent = message;
+
+  panel.append(glow, createFeedbackIcon(type), titleNode, messageNode);
+
+  if (detailText) {
+    const detailToggle = document.createElement("button");
+    detailToggle.className = "feedback-detail-toggle";
+    detailToggle.type = "button";
+    detailToggle.textContent = type === "error" ? "查看错误详情" : "查看技术详情";
+    detailToggle.setAttribute("aria-expanded", "false");
+
+    const detailPanel = document.createElement("pre");
+    detailPanel.className = "feedback-detail";
+    detailPanel.textContent = detailText;
+    detailPanel.hidden = true;
+
+    const copyButton = document.createElement("button");
+    copyButton.className = "feedback-detail-copy";
+    copyButton.type = "button";
+    copyButton.textContent = "复制详情";
+    copyButton.hidden = true;
+
+    detailToggle.addEventListener("click", () => {
+      const isOpen = !detailPanel.hidden;
+      detailPanel.hidden = isOpen;
+      copyButton.hidden = isOpen;
+      detailToggle.classList.toggle("is-open", !isOpen);
+      detailToggle.textContent = isOpen ? (type === "error" ? "查看错误详情" : "查看技术详情") : "收起详情";
+      detailToggle.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        if (!navigator.clipboard?.writeText) {
+          throw new Error("Clipboard API unavailable");
+        }
+        await navigator.clipboard.writeText(detailText);
+        showToast({ type: "success", message: "错误详情已复制" });
+      } catch {
+        showToast({ type: "warning", message: "复制失败，请长按详情手动复制" });
+      }
+    });
+
+    panel.append(detailToggle, detailPanel, copyButton);
+  }
+
+  if (!isLoading) {
+    const actions = document.createElement("div");
+    actions.className = "feedback-actions";
+    const defaultPrimaryText = type === "error" ? "我知道了" : "知道了";
+    const primaryText = options.primaryText || defaultPrimaryText;
+
+    if (options.secondaryText) {
+      const secondaryButton = document.createElement("button");
+      secondaryButton.className = "feedback-btn secondary";
+      secondaryButton.type = "button";
+      secondaryButton.textContent = options.secondaryText;
+      secondaryButton.addEventListener("click", () => {
+        closeFeedback();
+        options.onSecondary?.();
+      });
+      actions.append(secondaryButton);
+    }
+
+    if (primaryText) {
+      const primaryButton = document.createElement("button");
+      primaryButton.className = "feedback-btn primary";
+      primaryButton.type = "button";
+      primaryButton.textContent = primaryText;
+      primaryButton.addEventListener("click", () => {
+        closeFeedback();
+        options.onPrimary?.();
+      });
+      actions.append(primaryButton);
+      window.setTimeout(() => primaryButton.focus({ preventScroll: true }), 260);
+    }
+
+    panel.append(actions);
+  }
+
+  overlay.append(panel);
+  root.append(overlay);
+  document.body.append(root);
+  feedbackState.modalRoot = root;
+  feedbackState.activeType = type;
+
+  window.requestAnimationFrame(() => {
+    overlay.classList.add("is-visible");
+    panel.classList.add("is-visible");
+  });
+
+  if (options.autoClose) {
+    feedbackState.modalTimer = window.setTimeout(() => closeFeedback(), options.duration || 2200);
+  }
+
+  return root;
+}
+
+function showSuccess(options = {}) {
+  return showFeedback({
+    type: "success",
+    title: options.title || "操作完成",
+    message: options.message || "当前操作已完成。",
+    primaryText: options.primaryText || "知道了",
+    secondaryText: options.secondaryText,
+    onPrimary: options.onPrimary,
+    onSecondary: options.onSecondary,
+    autoClose: options.autoClose,
+    duration: options.duration
+  });
+}
+
+function showError(options = {}) {
+  const retry = typeof options.retry === "function" ? options.retry : null;
+
+  return showFeedback({
+    type: "error",
+    title: options.title || "请求失败",
+    message: options.message || "当前操作没有完成，请稍后重试。",
+    detail: options.detail,
+    primaryText: options.primaryText || (retry ? "重试" : "我知道了"),
+    secondaryText: options.secondaryText || (retry ? "关闭" : ""),
+    onPrimary: retry || options.onPrimary,
+    onSecondary: options.onSecondary,
+    autoClose: options.autoClose,
+    duration: options.duration
+  });
+}
+
+function showLoading(options = {}) {
+  return showFeedback({
+    type: "loading",
+    title: options.title || "正在处理",
+    message: options.message || "瞬忆正在处理当前请求，请稍候…"
+  });
+}
+
+function hideLoading() {
+  if (feedbackState.activeType === "loading") {
+    closeFeedback({ immediate: true });
+  }
 }
 
 function formatImportance(importance) {
@@ -427,8 +737,7 @@ function createDebugSummary(data) {
   if (data.state) {
     return [
       `paused: ${data.state.paused}`,
-      `encryptionEnabled: ${data.state.encryptionEnabled}`,
-      `lowPowerMode: ${data.state.lowPowerMode}`,
+      `privacyMode: ${data.state.privacyMode}`,
       `lastAction: ${data.state.lastAction || ""}`
     ].join("\n");
   }
@@ -510,24 +819,25 @@ function renderRequestDebug(key) {
   `;
 }
 
-function notifyRequestFailure(label, key, error) {
+function notifyRequestFailure(label, key, error, options = {}) {
   failRequestDebug(key, error);
 
   const url = error.requestUrl || state.requestDebug[key]?.url || "";
-  const name = error.name || "Error";
-  const message = error.message || String(error);
+  const formatted = formatRequestError(error, url);
+  const hasRetry = typeof options.retry === "function";
 
-  window.alert?.([
-    `${label}请求失败`,
-    `接口：${url}`,
-    `error.name：${name}`,
-    `error.message：${message}`
-  ].join("\n"));
-  showToast(`${label}失败：${message}`);
-}
+  showError({
+    title: options.title || formatted.title,
+    message: options.message || formatted.message,
+    detail: options.detail || formatted.detail,
+    retry: options.retry,
+    primaryText: options.primaryText,
+    secondaryText: options.secondaryText || (hasRetry && formatted.title === "无法连接本地服务" ? "我知道了" : undefined)
+  });
 
-function getBackendConfigCandidateUrl() {
-  return normalizeApiBaseUrl(state.backendConfig.input || state.backendConfig.current || DEFAULT_API_BASE_URL);
+  if (options.toastMessage) {
+    showToast({ type: "error", message: options.toastMessage });
+  }
 }
 
 function validateApiBaseUrl(url) {
@@ -552,8 +862,6 @@ function syncBackendConfigState() {
 function normalizeAppState(nextState = {}) {
   return {
     paused: Boolean(nextState.paused),
-    encryptionEnabled: Boolean(nextState.encryptionEnabled),
-    lowPowerMode: Boolean(nextState.lowPowerMode),
     privacyMode: nextState.privacyMode !== false,
     lastAction: pickTextValue(nextState.lastAction, ""),
     updatedAt: pickTextValue(nextState.updatedAt, "")
@@ -568,38 +876,63 @@ function setAppState(nextState) {
   scheduleBackendSync();
 }
 
+function pickMemoryText(memory = {}, keys = [], fallback = "") {
+  for (const key of keys) {
+    const value = memory[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+  }
+
+  return fallback;
+}
+
 function normalizeMemoryTags(memory) {
-  const tags = normalizeMeetingList(memory.tags || memory.tag, []);
+  const tags = normalizeMeetingList(memory.tags || memory.autoTags || memory.tag, []);
   const category = pickTextValue(memory.category, "");
 
   if (category && !tags.includes(category)) {
     tags.push(category);
   }
 
-  return tags.length > 0 ? tags : ["后端记忆"];
+  return tags;
 }
 
 function normalizeBackendMemory(memory = {}) {
   const tags = normalizeMemoryTags(memory);
-  const aiContent = pickTextValue(
-    memory.aiContent,
-    pickTextValue(memory.aiSummary, pickTextValue(memory.summary, "已保存一条记忆片段。"))
-  );
+  const aiContent = pickMemoryText(memory, ["summary", "aiSummary", "aiContent"], "暂无摘要");
+  const rawContent = pickMemoryText(memory, ["content", "rawText", "rawContent", "text"], "暂无原始内容");
+  const keyPoints = normalizeMeetingList(memory.points || memory.keyPoints || memory.highlights, []);
+  const createdAt = pickMemoryText(memory, ["createdAt", "time", "updatedAt"], "");
 
   return {
     id: pickTextValue(memory.id, `memory-${Date.now()}`),
-    type: pickTextValue(memory.type, "text"),
-    title: pickTextValue(memory.title, "后端记忆片段"),
-    rawContent: pickTextValue(memory.rawContent, aiContent),
+    type: pickMemoryText(memory, ["type"], "text"),
+    title: pickMemoryText(memory, ["title", "name"], "未命名记忆"),
+    rawContent,
+    content: rawContent,
+    rawText: rawContent,
     aiContent,
-    keyPoints: normalizeMeetingList(memory.keyPoints, []),
-    todos: normalizeMeetingList(memory.todos, []),
+    aiSummary: aiContent,
+    summary: aiContent,
+    keyPoints,
+    points: keyPoints,
+    todos: normalizeMeetingList(memory.todos || memory.tasks || memory.todoItems, []),
     tag: tags,
-    time: pickTextValue(memory.time, formatCurrentTime()),
-    location: pickTextValue(memory.location, pickTextValue(memory.category, "后端记忆舱")),
-    source: pickTextValue(memory.source, "Node.js 后端"),
-    importance: normalizeMeetingImportance(memory.importance),
-    archived: Boolean(memory.archived),
+    tags,
+    autoTags: tags,
+    time: pickMemoryText(memory, ["time"], formatCurrentTime()),
+    createdAt,
+    updatedAt: pickMemoryText(memory, ["updatedAt"], ""),
+    location: pickTextValue(memory.location, pickTextValue(memory.category, "记忆舱")),
+    source: pickMemoryText(memory, ["source", "from"], "APP"),
+    importance: normalizeMeetingImportance(memory.importance ?? memory.score),
+    archived: Boolean(memory.archived ?? memory.isArchived),
     category: pickTextValue(memory.category, "")
   };
 }
@@ -610,6 +943,10 @@ function setMemoriesFromBackend(memories) {
 
   if (normalized.length > 0 && !mockMemories.some((memory) => memory.id === state.expandedId)) {
     state.expandedId = normalized[0].id;
+  }
+
+  if (state.detailMemoryId && !mockMemories.some((memory) => memory.id === state.detailMemoryId)) {
+    state.detailMemoryId = "";
   }
 }
 
@@ -623,6 +960,7 @@ function upsertMemoryFromBackend(memory) {
 
   mockMemories.unshift(normalized);
   state.expandedId = normalized.id;
+  state.detailMemoryId = normalized.id;
   return normalized;
 }
 
@@ -633,7 +971,7 @@ async function loadAppState({ silent = false } = {}) {
   state.syncMessage = "";
 
   if (!silent) {
-    showToast("已同步后端状态");
+    showToast({ type: "success", message: "状态已同步" });
   }
 
   return nextState;
@@ -646,7 +984,7 @@ async function loadMemories({ silent = false } = {}) {
   state.syncMessage = "";
 
   if (!silent) {
-    showToast("已同步后端记忆");
+    showToast({ type: "success", message: "记忆已同步" });
   }
 
   return payload.memories;
@@ -663,10 +1001,10 @@ async function syncBackendData({ silent = true } = {}) {
     state.syncMessage = "后端离线时使用本地数据";
 
     if (!silent) {
-      showToast("后端离线，已使用本地兜底数据");
+      showToast({ type: "warning", message: "后端离线，已使用本地兜底数据" });
     }
   } else if (!silent) {
-    showToast("后端状态与记忆已同步");
+    showToast({ type: "success", message: "后端状态与记忆已同步" });
   }
 
   render();
@@ -674,10 +1012,9 @@ async function syncBackendData({ silent = true } = {}) {
 
 function scheduleBackendSync() {
   window.clearInterval(backendSyncTimerId);
-  const intervalMs = state.appState.lowPowerMode ? 90000 : 30000;
   backendSyncTimerId = window.setInterval(() => {
     syncBackendData({ silent: true });
-  }, intervalMs);
+  }, 30000);
 }
 
 function createMeetingMemory(meetingResult = mockMeetingContent) {
@@ -764,11 +1101,13 @@ function setDiagnosticOutput(status, output) {
 
 async function runDiagnosticRequest(label, url, options) {
   const lines = [`${label}: 请求中`];
+  let ok = false;
 
   try {
     const response = await fetch(url, options);
     const text = await readResponseText(response);
 
+    ok = response.ok;
     lines[0] = `${label}: ${response.ok ? "成功" : "失败"}`;
     lines.push(`status: ${response.status} ${response.statusText}`);
 
@@ -780,7 +1119,10 @@ async function runDiagnosticRequest(label, url, options) {
     lines.push(formatErrorDetail(error));
   }
 
-  return lines.join("\n");
+  return {
+    ok,
+    output: lines.join("\n")
+  };
 }
 
 async function runBackendDiagnostics() {
@@ -791,14 +1133,19 @@ async function runBackendDiagnostics() {
   const currentApiBaseUrl = getApiBaseUrl();
 
   setDiagnosticOutput("running", `当前后端地址: ${currentApiBaseUrl}\n正在执行后端连接诊断...`);
+  showLoading({
+    title: "正在连接本地服务",
+    message: "正在确认后端状态，请稍候…"
+  });
 
   const lines = [`当前后端地址: ${currentApiBaseUrl}`, ""];
+  const results = [];
 
-  lines.push(await runDiagnosticRequest("GET /api/status", buildApiUrl("/api/status"), {
+  results.push(await runDiagnosticRequest("GET /api/status", buildApiUrl("/api/status"), {
     method: "GET"
   }));
   lines.push("");
-  lines.push(await runDiagnosticRequest("POST /api/meeting/mock", buildApiUrl(MEETING_MOCK_PATH), {
+  results.push(await runDiagnosticRequest("POST /api/meeting/mock", buildApiUrl(MEETING_MOCK_PATH), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -806,14 +1153,14 @@ async function runBackendDiagnostics() {
     body: JSON.stringify({})
   }));
   lines.push("");
-  lines.push(await runDiagnosticRequest("GET /api/app/state", buildApiUrl(APP_STATE_PATH), {
+  results.push(await runDiagnosticRequest("GET /api/app/state", buildApiUrl(APP_STATE_PATH), {
     method: "GET",
     headers: {
       "X-ShunYi-Source": "android_app"
     }
   }));
   lines.push("");
-  lines.push(await runDiagnosticRequest("POST /api/features/voice-transcribe", buildApiUrl("/api/features/voice-transcribe"), {
+  results.push(await runDiagnosticRequest("POST /api/features/voice-transcribe", buildApiUrl("/api/features/voice-transcribe"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -822,7 +1169,36 @@ async function runBackendDiagnostics() {
     body: JSON.stringify({})
   }));
 
+  results.forEach((result, index) => {
+    if (index > 0) {
+      lines.push("");
+    }
+    lines.push(result.output);
+  });
+
+  hideLoading();
   setDiagnosticOutput("complete", lines.join("\n"));
+
+  if (results.some((result) => result.ok)) {
+    showSuccess({
+      title: "连接成功",
+      message: "已连接到本地服务，APP 可以同步请求和记忆数据。",
+      primaryText: "完成"
+    });
+  } else {
+    showError({
+      title: "连接测试失败",
+      message: "当前地址无法访问，请检查 IP、端口和电脑防火墙设置。",
+      detail: [
+        `接口地址：${currentApiBaseUrl}`,
+        "错误信息：诊断接口均未成功返回",
+        lines.join("\n")
+      ],
+      retry: runBackendDiagnostics,
+      primaryText: "重新测试",
+      secondaryText: "关闭"
+    });
+  }
 }
 
 function completeMeetingRecord(meetingResult = mockMeetingContent) {
@@ -833,14 +1209,24 @@ function completeMeetingRecord(meetingResult = mockMeetingContent) {
   state.meeting.resultId = meetingMemory.id;
   state.expandedId = meetingMemory.id;
   render();
-  showToast("已保存到记忆舱");
+  showSuccess({
+    title: "会议记录已生成",
+    message: "摘要、重点、待办和标签已保存到记忆舱。",
+    primaryText: "查看结果",
+    secondaryText: "继续记录",
+    onPrimary: () => {
+      state.tab = "capsule";
+      state.expandedId = meetingMemory.id;
+      render();
+    }
+  });
 }
 
 async function startMeetingRecord() {
   void reportEvent("start_meeting_click");
 
   if (state.appState.paused) {
-    showToast("当前已暂停，恢复运行后才能开始会议记录");
+    showToast({ type: "warning", message: "当前已暂停，恢复运行后才能开始会议记录" });
     return;
   }
 
@@ -859,16 +1245,23 @@ async function startMeetingRecord() {
   ];
 
   let meetingResult;
+  showLoading({
+    title: "正在连接本地服务",
+    message: "正在确认后端状态，请稍候…"
+  });
 
   try {
     meetingResult = await requestMeetingMock();
+    hideLoading();
     setBackendStatus("success");
   } catch (error) {
+    hideLoading();
     console.log("后端请求失败，使用本地 mock");
     console.error(error);
     setBackendStatus("error", getBackendErrorMessage(error));
     void reportEvent("request_meeting_failed", getBackendErrorMessage(error));
     meetingResult = mockMeetingContent;
+    showToast({ type: "warning", message: "后端离线，已启用本地演示数据" });
   }
 
   if (state.meeting.status === "hardware") {
@@ -903,9 +1296,7 @@ function getFeatureAction(title) {
 function getPrivacyAction(title) {
   return {
     一键暂停: "pause",
-    本地加密: "encryption",
-    片段删除: "delete",
-    低耗模式: "low-power"
+    片段删除: "delete"
   }[title] || "";
 }
 
@@ -927,14 +1318,6 @@ function renderStateStrip() {
       <div>
         <span>采集状态</span>
         <strong>${escapeHtml(getRunningText())}</strong>
-      </div>
-      <div>
-        <span>本地加密</span>
-        <strong>${escapeHtml(getOnOffText(state.appState.encryptionEnabled))}</strong>
-      </div>
-      <div>
-        <span>低耗模式</span>
-        <strong>${escapeHtml(getOnOffText(state.appState.lowPowerMode))}</strong>
       </div>
       <div>
         <span>隐私模式</span>
@@ -1092,8 +1475,6 @@ function renderPrivacyPanel() {
   const body = `
     <div class="privacy-state-list">
       ${renderSwitchRow("暂停采集", "pause", state.appState.paused)}
-      ${renderSwitchRow("本地加密", "encryption", state.appState.encryptionEnabled)}
-      ${renderSwitchRow("低耗模式", "lowPower", state.appState.lowPowerMode)}
       ${renderSwitchRow("隐私模式", "privacyMode", state.appState.privacyMode, true)}
     </div>
     <p class="panel-muted">状态来自 GET /api/app/state。当前不申请麦克风、剪贴板、蓝牙、定位或后台录音权限。</p>
@@ -1163,23 +1544,28 @@ async function saveBackendBaseUrl() {
     state.backendConfig.input = normalized;
     state.backendOffline = false;
     state.syncMessage = "";
-    showToast("后端地址已保存");
+    showToast({ type: "success", message: "后端地址已保存" });
     render();
     await syncBackendData({ silent: true });
   } catch (error) {
+    const inputUrl = normalizeApiBaseUrl(state.backendConfig.input || "");
     setRequestDebug("backend-config", {
-      url: getBackendConfigCandidateUrl(),
+      url: inputUrl,
       status: "请求失败",
       errorName: "ValidationError",
       errorMessage: error.message,
       result: ""
     });
-    window.alert?.([
-      "后端地址保存失败",
-      `error.name：ValidationError`,
-      `error.message：${error.message}`
-    ].join("\n"));
-    showToast(`后端地址无效：${error.message}`);
+    showError({
+      title: "后端地址无效",
+      message: "请填写以 http:// 或 https:// 开头的本地服务地址。",
+      detail: [
+        `接口地址：${inputUrl || "未填写"}`,
+        "错误类型：ValidationError",
+        `错误信息：${error.message}`
+      ],
+      primaryText: "我知道了"
+    });
     render();
   }
 }
@@ -1190,20 +1576,26 @@ async function testBackendBaseUrl() {
   try {
     normalized = validateApiBaseUrl(state.backendConfig.input);
   } catch (error) {
+    const inputUrl = normalizeApiBaseUrl(state.backendConfig.input || "");
     setRequestDebug("backend-config", {
-      url: getBackendConfigCandidateUrl(),
+      url: inputUrl,
       status: "请求失败",
       errorName: "ValidationError",
       errorMessage: error.message,
       result: ""
     });
-    window.alert?.([
-      "后端连接失败",
-      `接口：${getBackendConfigCandidateUrl()}/api/status`,
-      `error.name：ValidationError`,
-      `error.message：${error.message}`
-    ].join("\n"));
-    showToast(`后端连接失败：${error.message}`);
+    showError({
+      title: "连接测试失败",
+      message: "当前地址无法访问，请检查 IP、端口和电脑防火墙设置。",
+      detail: [
+        `接口地址：${inputUrl ? `${inputUrl}/api/status` : "未填写"}`,
+        "错误类型：ValidationError",
+        `错误信息：${error.message}`
+      ],
+      primaryText: "重新测试",
+      secondaryText: "关闭",
+      onPrimary: testBackendBaseUrl
+    });
     render();
     return;
   }
@@ -1211,6 +1603,10 @@ async function testBackendBaseUrl() {
   state.backendConfig.testing = true;
   startRequestDebug("backend-config", "/api/status", normalized);
   render();
+  showLoading({
+    title: "正在连接本地服务",
+    message: "正在确认后端状态，请稍候…"
+  });
 
   try {
     const payload = await apiRequest("/api/status", {
@@ -1218,16 +1614,21 @@ async function testBackendBaseUrl() {
       baseUrl: normalized
     });
     completeRequestDebug("backend-config", payload);
-    window.alert?.([
-      "后端连接成功",
-      `service：${payload.service || ""}`,
-      `message：${payload.message || ""}`,
-      `aiMode：${payload.aiMode || ""}`,
-      `esp32Status：${payload.esp32Status || ""}`
-    ].join("\n"));
-    showToast("后端连接成功");
+    hideLoading();
+    showSuccess({
+      title: "连接成功",
+      message: "已连接到本地服务，APP 可以同步请求和记忆数据。",
+      primaryText: "完成"
+    });
   } catch (error) {
-    notifyRequestFailure("后端连接", "backend-config", error);
+    hideLoading();
+    notifyRequestFailure("后端连接", "backend-config", error, {
+      title: "连接测试失败",
+      message: "当前地址无法访问，请检查 IP、端口和电脑防火墙设置。",
+      retry: testBackendBaseUrl,
+      primaryText: "重新测试",
+      secondaryText: "关闭"
+    });
   } finally {
     state.backendConfig.testing = false;
     render();
@@ -1247,7 +1648,7 @@ function restoreDefaultBackendBaseUrl() {
     errorMessage: "",
     result: `currentBaseUrl: ${DEFAULT_API_BASE_URL}`
   });
-  showToast("已恢复默认后端地址");
+  showToast({ type: "info", message: "已恢复默认后端地址" });
   render();
   void syncBackendData({ silent: true });
 }
@@ -1284,6 +1685,10 @@ async function handleVoiceTranscribe() {
   state.featureStatus.voice = "running";
   startRequestDebug("voice", path);
   render();
+  showLoading({
+    title: "正在保存记忆",
+    message: "瞬忆正在写入你的个人记忆舱…"
+  });
 
   try {
     const payload = await apiRequest(path, {
@@ -1296,13 +1701,26 @@ async function handleVoiceTranscribe() {
     state.backendOffline = false;
     state.syncMessage = "";
     completeRequestDebug("voice", payload);
-    window.alert?.("请求成功：语音转写记录已保存");
-    showToast("语音转写记录已保存");
+    hideLoading();
+    showSuccess({
+      title: "记录已保存",
+      message: "语音转写结果已写入记忆舱，可继续进行 AI 整理。",
+      primaryText: "查看记忆舱",
+      secondaryText: "稍后再看",
+      onPrimary: () => {
+        state.tab = "capsule";
+        state.expandedId = memory.id;
+        render();
+      }
+    });
   } catch (error) {
+    hideLoading();
     state.featureStatus.voice = "error";
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("语音转写", "voice", error);
+    notifyRequestFailure("语音转写", "voice", error, {
+      retry: handleVoiceTranscribe
+    });
   }
 
   render();
@@ -1314,6 +1732,10 @@ async function handleAiPolish() {
   state.aiPolish.status = "running";
   startRequestDebug("ai-polish", path);
   render();
+  showLoading({
+    title: "AI 正在整理内容",
+    message: "正在提取摘要、重点、待办和标签…"
+  });
 
   try {
     const payload = await apiRequest(path, {
@@ -1328,13 +1750,20 @@ async function handleAiPolish() {
     state.backendOffline = false;
     state.syncMessage = "";
     completeRequestDebug("ai-polish", payload);
-    window.alert?.("请求成功：AI 修正结果已保存");
-    showToast("AI 修正结果已保存");
+    hideLoading();
+    showSuccess({
+      title: "AI 修正完成",
+      message: "内容已变得更清晰，重点和表达已完成优化。",
+      primaryText: "知道了"
+    });
   } catch (error) {
+    hideLoading();
     state.aiPolish.status = "error";
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("AI 修正", "ai-polish", error);
+    notifyRequestFailure("AI 修正", "ai-polish", error, {
+      retry: handleAiPolish
+    });
   }
 
   render();
@@ -1346,6 +1775,10 @@ async function handleArchiveMemories() {
   state.featureStatus.archive = "running";
   startRequestDebug("archive", path);
   render();
+  showLoading({
+    title: "AI 正在整理内容",
+    message: "正在提取摘要、重点、待办和标签…"
+  });
 
   try {
     const payload = await apiRequest(path, {
@@ -1358,13 +1791,20 @@ async function handleArchiveMemories() {
     state.backendOffline = false;
     state.syncMessage = "";
     completeRequestDebug("archive", payload);
-    window.alert?.("请求成功：自动归档完成");
-    showToast("自动归档完成");
+    hideLoading();
+    showSuccess({
+      title: "归档完成",
+      message: "记忆片段已按主题整理，后续可在记忆舱中检索。",
+      primaryText: "知道了"
+    });
   } catch (error) {
+    hideLoading();
     state.featureStatus.archive = "error";
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("自动归档", "archive", error);
+    notifyRequestFailure("自动归档", "archive", error, {
+      retry: handleArchiveMemories
+    });
   }
 
   render();
@@ -1374,14 +1814,22 @@ async function openPrivacyPanel() {
   state.activePanel = "privacy";
   startRequestDebug("privacy", APP_STATE_PATH);
   render();
+  showLoading({
+    title: "正在同步状态",
+    message: "正在更新本地服务中的 APP 状态…"
+  });
 
   try {
     const nextState = await loadAppState({ silent: true });
     completeRequestDebug("privacy", nextState);
+    hideLoading();
   } catch (error) {
+    hideLoading();
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("隐私状态同步", "privacy", error);
+    notifyRequestFailure("隐私状态同步", "privacy", error, {
+      retry: openPrivacyPanel
+    });
   }
 
   render();
@@ -1396,22 +1844,6 @@ async function toggleSetting(setting) {
       off: "运行中",
       toastOn: "一键暂停已开启",
       toastOff: "一键暂停已关闭"
-    },
-    encryption: {
-      field: "encryptionEnabled",
-      endpoint: settingEndpointMap.encryption,
-      on: "本地加密已开启",
-      off: "本地加密已关闭",
-      toastOn: "本地加密已开启",
-      toastOff: "本地加密已关闭"
-    },
-    lowPower: {
-      field: "lowPowerMode",
-      endpoint: settingEndpointMap.lowPower,
-      on: "低耗模式已开启",
-      off: "低耗模式已关闭",
-      toastOn: "低耗模式已开启",
-      toastOff: "低耗模式已关闭"
     }
   }[setting];
 
@@ -1423,6 +1855,10 @@ async function toggleSetting(setting) {
   state.activePanel = "privacy";
   startRequestDebug("privacy", settingConfig.endpoint);
   render();
+  showLoading({
+    title: "正在同步状态",
+    message: "正在更新本地服务中的 APP 状态…"
+  });
 
   try {
     const payload = await apiRequest(settingConfig.endpoint, {
@@ -1433,12 +1869,19 @@ async function toggleSetting(setting) {
     state.backendOffline = false;
     state.syncMessage = "";
     completeRequestDebug("privacy", payload);
-    window.alert?.(`请求成功：${enabled ? settingConfig.toastOn : settingConfig.toastOff}`);
-    showToast(enabled ? settingConfig.toastOn : settingConfig.toastOff);
+    hideLoading();
+    showSuccess({
+      title: enabled ? "暂停已开启" : "采集已恢复",
+      message: enabled ? "当前采集流程已暂停，你可以稍后继续恢复记录。" : "瞬忆将继续整理新的碎片信息。",
+      primaryText: "知道了"
+    });
   } catch (error) {
+    hideLoading();
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("状态更新", "privacy", error);
+    notifyRequestFailure("状态更新", "privacy", error, {
+      retry: () => toggleSetting(setting)
+    });
   }
 
   render();
@@ -1455,6 +1898,10 @@ async function loadDeleteList() {
   state.deleteListLoaded = false;
   startRequestDebug("delete", path);
   render();
+  showLoading({
+    title: "正在同步状态",
+    message: "正在更新本地服务中的 APP 状态…"
+  });
 
   try {
     const payload = await apiRequest(path);
@@ -1466,20 +1913,43 @@ async function loadDeleteList() {
     state.backendOffline = false;
     state.syncMessage = "";
     completeRequestDebug("delete", payload);
+    hideLoading();
+    showToast({ type: "success", message: "记忆列表已同步" });
   } catch (error) {
+    hideLoading();
     state.featureStatus.delete = "error";
     state.backendOffline = true;
     state.syncMessage = "后端离线时使用本地数据";
-    notifyRequestFailure("记忆列表同步", "delete", error);
+    notifyRequestFailure("记忆列表同步", "delete", error, {
+      retry: loadDeleteList
+    });
   }
 
   render();
+}
+
+function confirmDeleteMemory(id) {
+  const targetMemory = [...state.deleteMemories, ...mockMemories].find((memory) => memory.id === id);
+  const title = targetMemory ? getMemoryTitle(targetMemory) : "这条记忆";
+
+  showFeedback({
+    type: "warning",
+    title: "删除确认",
+    message: `确认删除「${title}」？删除后会从当前列表中移除。`,
+    primaryText: "删除",
+    secondaryText: "取消",
+    onPrimary: () => deleteMemory(id)
+  });
 }
 
 async function deleteMemory(id) {
   const path = `${MEMORIES_PATH}/${encodeURIComponent(id)}`;
   startRequestDebug("delete", path);
   render();
+  showLoading({
+    title: "正在同步状态",
+    message: "正在更新本地服务中的 APP 状态…"
+  });
 
   try {
     const payload = await apiRequest(path, {
@@ -1493,11 +1963,22 @@ async function deleteMemory(id) {
     if (state.expandedId === id) {
       state.expandedId = mockMemories[0]?.id || "";
     }
+    if (state.detailMemoryId === id) {
+      state.detailMemoryId = "";
+    }
     completeRequestDebug("delete", payload);
-    window.alert?.("请求成功：片段已删除");
-    showToast("片段已删除");
+    hideLoading();
+    showSuccess({
+      title: "片段已删除",
+      message: "选中的记忆片段已从当前列表中移除。",
+      primaryText: "知道了"
+    });
+    showToast({ type: "success", message: "删除成功" });
   } catch (error) {
-    notifyRequestFailure("片段删除", "delete", error);
+    hideLoading();
+    notifyRequestFailure("片段删除", "delete", error, {
+      retry: () => deleteMemory(id)
+    });
   }
 
   render();
@@ -1878,8 +2359,8 @@ function renderCapsule() {
 
       <div class="memory-list-head">
         <div>
-          <h2>记忆列表</h2>
-          <p>点击卡片查看完整回溯链路</p>
+          <h2>记忆时间线</h2>
+          <p>按日期沉淀记忆片段，点击卡片查看完整详情</p>
         </div>
         <span class="mini-chip" id="memory-count">${results.length} 条</span>
       </div>
@@ -1887,6 +2368,8 @@ function renderCapsule() {
       <div class="memory-list" id="memory-list">
         ${renderMemoryList(results)}
       </div>
+
+      ${renderMemoryDetailModal()}
     </section>
   `;
 }
@@ -1928,14 +2411,6 @@ function renderProcess(title, desc) {
   `;
 }
 
-function renderMemoryList(list = getFilteredMemories()) {
-  if (!list.length) {
-    return `<div class="empty-state">暂无后端记忆。后端离线时会保留本地兜底数据。</div>`;
-  }
-
-  return list.map(renderMemoryCard).join("");
-}
-
 function getCategoryStats() {
   if (mockMemories.length === 0) {
     return [];
@@ -1943,7 +2418,8 @@ function getCategoryStats() {
 
   const counts = new Map();
   mockMemories.forEach((memory) => {
-    const tags = memory.category ? [memory.category, ...memory.tag] : memory.tag;
+    const memoryTags = getMemoryTags(memory);
+    const tags = memory.category ? [memory.category, ...memoryTags] : memoryTags;
     tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1));
   });
 
@@ -1956,98 +2432,396 @@ function getCategoryStats() {
   return [...preferredStats, ...fallbackStats].slice(0, 6);
 }
 
-function renderMemoryCard(item) {
-  const config = typeConfig[item.type] || typeConfig.text;
-  const isOpen = state.expandedId === item.id;
-  const source = item.source || config.label;
-  const category = item.category || item.tag[0] || "未分类";
-  const beforeLabel = item.type === "meeting" ? "原始识别文本" : "AI 修正前 · 原始碎片";
-  const afterLabel = item.type === "meeting" ? "AI 摘要" : "AI 修正后 · 清晰记忆";
-  return `
-    <article class="memory-card${isOpen ? " is-open" : ""}" data-memory-id="${escapeHtml(item.id)}">
-      <div class="memory-card-head">
-        <div>
-          <span class="source-pill">${escapeHtml(config.label)} · ${escapeHtml(config.tone)}</span>
-          <h3>${escapeHtml(item.title)}</h3>
-          <div class="card-meta">
-            <span>${escapeHtml(item.time)}</span>
-            <span>${escapeHtml(item.location)}</span>
-          </div>
-        </div>
-        <span class="score-pill">${formatImportance(item.importance)}</span>
-      </div>
+const memoryTypeLabels = {
+  meeting: "会议记录",
+  voice: "语音转写",
+  text: "AI 修正",
+  clipboard: "灵感记录",
+  todo: "待办事项",
+  idea: "灵感记录"
+};
 
-      <div class="memory-compare">
-        <div class="content-block before-block">
-          <span class="content-label">${escapeHtml(beforeLabel)}</span>
-          <p>${escapeHtml(item.rawContent)}</p>
-        </div>
-        <div class="compare-arrow" aria-hidden="true">
-          <svg class="flow-icon" viewBox="0 0 36 24">
-            <path d="M7 12h18" />
-            <path d="m20 7 5 5-5 5" />
-            <circle cx="8" cy="12" r="2.5" />
-          </svg>
-        </div>
-        <div class="content-block after-block">
-          <span class="content-label">${escapeHtml(afterLabel)}</span>
-          <p>${escapeHtml(item.aiContent)}</p>
-        </div>
-      </div>
-
-      <div class="tag-row" aria-label="自动标签">
-        ${item.tag.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join("")}
-      </div>
-
-      <div class="archive-strip" aria-label="自动分类和归档状态">
-        <span>自动分类：${escapeHtml(category)}</span>
-        <span>自动归档：${item.archived ? "长期记忆" : "待归档"}</span>
-        <span>来源：${escapeHtml(source)}</span>
-        <span>可回溯：${escapeHtml(item.time)} · ${escapeHtml(item.location)}</span>
-      </div>
-
-      ${renderMemoryDetail(item, config, source)}
-    </article>
-  `;
+function getMemoryById(id) {
+  return mockMemories.find((memory) => String(memory.id) === String(id)) || null;
 }
 
-function renderMemoryDetail(item, config, source) {
-  if (item.type === "meeting") {
+function getMemoryTitle(memory) {
+  return pickMemoryText(memory, ["title", "name"], "未命名记忆");
+}
+
+function getMemoryContent(memory) {
+  return pickMemoryText(memory, ["content", "rawText", "rawContent", "text"], "暂无原始内容");
+}
+
+function getMemorySummary(memory) {
+  return pickMemoryText(memory, ["summary", "aiSummary", "aiContent"], "暂无摘要");
+}
+
+function getMemoryPoints(memory) {
+  return normalizeMeetingList(memory.points || memory.keyPoints || memory.highlights, []);
+}
+
+function getMemoryTodos(memory) {
+  return normalizeMeetingList(memory.todos || memory.tasks || memory.todoItems, []);
+}
+
+function getMemoryTags(memory) {
+  return normalizeMeetingList(memory.tags || memory.autoTags || memory.tag, []);
+}
+
+function getMemorySource(memory) {
+  return pickMemoryText(memory, ["source", "from"], "APP");
+}
+
+function getMemoryTypeLabel(memory) {
+  return memoryTypeLabels[memory.type] || pickMemoryText(memory, ["type"], "灵感记录");
+}
+
+function getMemoryImportance(memory) {
+  const value = memory.importance ?? memory.score;
+  const formatted = formatImportance(value);
+  return formatted === "--" ? "普通" : formatted;
+}
+
+function isMemoryArchived(memory) {
+  return Boolean(memory.archived ?? memory.isArchived);
+}
+
+function parseMemoryDate(memory) {
+  const candidates = [
+    pickMemoryText(memory, ["createdAt"], ""),
+    pickMemoryText(memory, ["time"], ""),
+    pickMemoryText(memory, ["updatedAt"], "")
+  ].filter(Boolean);
+
+  for (const value of candidates) {
+    if (/^\d{1,2}:\d{2}$/.test(value)) {
+      const [hour, minute] = value.split(":").map(Number);
+      const date = new Date();
+      date.setHours(hour, minute, 0, 0);
+      return date;
+    }
+
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return new Date();
+}
+
+function formatMemoryClock(memory) {
+  const explicitTime = pickMemoryText(memory, ["time"], "");
+
+  if (/^\d{1,2}:\d{2}$/.test(explicitTime)) {
+    return explicitTime.padStart(5, "0");
+  }
+
+  const date = parseMemoryDate(memory);
+  if (!date) {
+    return explicitTime || "未知时间";
+  }
+
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatMemoryFullTime(memory) {
+  const date = parseMemoryDate(memory);
+
+  if (!date) {
+    return pickMemoryText(memory, ["createdAt", "time", "updatedAt"], "未知时间");
+  }
+
+  return [
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`,
+    `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`
+  ].join(" ");
+}
+
+function formatMemoryDateGroup(date) {
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  if (target.getTime() === today.getTime()) {
+    return "今天";
+  }
+
+  if (target.getTime() === yesterday.getTime()) {
+    return "昨天";
+  }
+
+  return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+}
+
+function groupMemoriesByDate(list) {
+  const groups = new Map();
+  const sorted = [...list].sort((left, right) => parseMemoryDate(right).getTime() - parseMemoryDate(left).getTime());
+
+  sorted.forEach((memory) => {
+    const date = parseMemoryDate(memory);
+    const key = formatMemoryDateGroup(date);
+
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+
+    groups.get(key).push(memory);
+  });
+
+  return [...groups.entries()].map(([label, memories]) => ({ label, memories }));
+}
+
+function renderMemoryList(list = getFilteredMemories()) {
+  if (!list.length) {
     return `
-      <div class="detail-panel">
-        <div class="meeting-detail-grid">
-          <section>
-            <span class="content-label">会议重点</span>
-            <ul>
-              ${item.keyPoints.map((point) => `<li>${escapeHtml(point)}</li>`).join("")}
-            </ul>
-          </section>
-          <section>
-            <span class="content-label">待办事项</span>
-            <ul>
-              ${item.todos.map((todo) => `<li>${escapeHtml(todo)}</li>`).join("")}
-            </ul>
-          </section>
-        </div>
-        <div class="trace-line">
-          <span>来源：${escapeHtml(source)}</span>
-          <span>时间：${escapeHtml(item.time)}</span>
-          <span>重要程度：${formatImportance(item.importance)}/10</span>
-          <span>自动标签：${item.tag.map(escapeHtml).join("、")}</span>
-        </div>
-      </div>
+      <section class="memory-empty-state">
+        <div class="memory-empty-icon">${icon("spark")}</div>
+        <h3>还没有记忆片段</h3>
+        <p>点击首页开始记录，让瞬忆帮你整理第一条记忆。</p>
+        <button class="memory-empty-button" type="button" data-empty-start>开始记录</button>
+      </section>
     `;
   }
 
   return `
-    <div class="detail-panel">
-      <p>完整内容：${escapeHtml(item.aiContent)} 该片段已进入 ${escapeHtml(item.category || item.tag[0] || "未分类")} 分类，状态为${item.archived ? "已归档" : "待归档"}。</p>
-      <div class="trace-line">
-        <span>来源：${escapeHtml(config.label)}</span>
-        <span>时间：${escapeHtml(item.time)}</span>
-      </div>
+    <div class="memory-timeline" aria-label="记忆时间线">
+      ${groupMemoriesByDate(list).map((group) => `
+        <section class="timeline-group">
+          <h3 class="timeline-date">${escapeHtml(group.label)}</h3>
+          <div class="timeline-group-list">
+            ${group.memories.map(renderMemoryCard).join("")}
+          </div>
+        </section>
+      `).join("")}
     </div>
   `;
+}
+
+function renderTimelineTags(tags) {
+  const visibleTags = tags.length ? tags.slice(0, 3) : ["暂无标签"];
+
+  return visibleTags
+    .map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`)
+    .join("");
+}
+
+function renderMemoryCard(item) {
+  const title = getMemoryTitle(item);
+  const summary = getMemorySummary(item);
+  const tags = getMemoryTags(item);
+  const source = getMemorySource(item);
+  const archived = isMemoryArchived(item);
+
+  return `
+    <article class="timeline-memory-item" data-memory-id="${escapeHtml(item.id)}" role="button" tabindex="0" aria-label="查看${escapeHtml(title)}详情">
+      <span class="timeline-rail" aria-hidden="true">
+        <span class="timeline-node"></span>
+      </span>
+      <div class="memory-card timeline-memory-card">
+        <div class="memory-card-head">
+          <div>
+            <span class="source-pill">${escapeHtml(getMemoryTypeLabel(item))}</span>
+            <h3>${escapeHtml(title)}</h3>
+            <div class="card-meta">
+              <span>${escapeHtml(formatMemoryClock(item))}</span>
+              <span>${escapeHtml(source)}</span>
+              <span>${archived ? "已归档" : "未归档"}</span>
+            </div>
+          </div>
+          <span class="score-pill">${escapeHtml(getMemoryImportance(item))}</span>
+        </div>
+        <p class="timeline-summary">${escapeHtml(summary)}</p>
+        <div class="tag-row" aria-label="自动标签">
+          ${renderTimelineTags(tags)}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderListItems(items, fallback) {
+  if (!items.length) {
+    return `<p class="memory-detail-muted">${escapeHtml(fallback)}</p>`;
+  }
+
+  return `
+    <ul class="memory-detail-list">
+      ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderDetailTags(tags) {
+  if (!tags.length) {
+    return `<p class="memory-detail-muted">暂无标签</p>`;
+  }
+
+  return `
+    <div class="memory-detail-tags">
+      ${tags.map((tag) => `<span class="tag-pill">${escapeHtml(tag)}</span>`).join("")}
+    </div>
+  `;
+}
+
+function renderMemoryDetailModal() {
+  const memory = getMemoryById(state.detailMemoryId);
+
+  if (!memory) {
+    return "";
+  }
+
+  const title = getMemoryTitle(memory);
+  const tags = getMemoryTags(memory);
+  const archived = isMemoryArchived(memory);
+
+  return `
+    <div class="memory-detail-overlay" data-detail-overlay>
+      <section class="memory-detail-modal" role="dialog" aria-modal="true" aria-label="记忆详情">
+        <div class="memory-detail-glow" aria-hidden="true"></div>
+        <header class="memory-detail-header">
+          <div>
+            <span class="memory-detail-kicker">${escapeHtml(getMemoryTypeLabel(memory))}</span>
+            <h2>${escapeHtml(title)}</h2>
+          </div>
+          <button class="memory-detail-close" type="button" data-detail-close aria-label="关闭">×</button>
+        </header>
+
+        <div class="memory-detail-meta">
+          <span>来源：${escapeHtml(getMemorySource(memory))}</span>
+          <span>创建：${escapeHtml(formatMemoryFullTime(memory))}</span>
+          <span>重要：${escapeHtml(getMemoryImportance(memory))}</span>
+          <span>${archived ? "已归档" : "未归档"}</span>
+        </div>
+
+        <div class="memory-detail-body">
+          <section class="memory-detail-section">
+            <h3>原始内容</h3>
+            <p class="memory-detail-raw">${escapeHtml(getMemoryContent(memory))}</p>
+          </section>
+
+          <section class="memory-detail-section memory-summary-card">
+            <h3>AI 摘要</h3>
+            <p>${escapeHtml(getMemorySummary(memory))}</p>
+          </section>
+
+          <section class="memory-detail-section">
+            <h3>关键重点</h3>
+            ${renderListItems(getMemoryPoints(memory), "暂无重点")}
+          </section>
+
+          <section class="memory-detail-section">
+            <h3>待办事项</h3>
+            ${renderListItems(getMemoryTodos(memory), "暂无待办")}
+          </section>
+
+          <section class="memory-detail-section">
+            <h3>自动标签</h3>
+            ${renderDetailTags(tags)}
+          </section>
+        </div>
+
+        <footer class="memory-detail-actions">
+          <button class="secondary-inline" type="button" data-memory-copy="${escapeHtml(memory.id)}">复制内容</button>
+          <button class="primary-inline" type="button" data-memory-archive="${escapeHtml(memory.id)}">${archived ? "取消归档" : "归档"}</button>
+          <button class="danger-inline" type="button" data-delete-memory="${escapeHtml(memory.id)}">删除</button>
+          <button class="secondary-inline" type="button" data-detail-close>关闭</button>
+        </footer>
+      </section>
+    </div>
+  `;
+}
+
+function buildMemoryClipboardText(memory) {
+  const points = getMemoryPoints(memory);
+  const todos = getMemoryTodos(memory);
+  const tags = getMemoryTags(memory);
+
+  return [
+    `标题：${getMemoryTitle(memory)}`,
+    `摘要：${getMemorySummary(memory)}`,
+    `重点：${points.length ? points.join("；") : "暂无重点"}`,
+    `待办：${todos.length ? todos.join("；") : "暂无待办"}`,
+    `标签：${tags.length ? tags.join("、") : "暂无标签"}`
+  ].join("\n");
+}
+
+async function writeClipboardText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.append(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+async function copyMemoryDetail(id) {
+  const memory = getMemoryById(id);
+
+  if (!memory) {
+    showToast({ type: "warning", message: "记忆片段不存在" });
+    return;
+  }
+
+  try {
+    await writeClipboardText(buildMemoryClipboardText(memory));
+    showToast({ type: "success", message: "内容已复制" });
+  } catch {
+    showToast({ type: "warning", message: "复制失败，请手动复制" });
+  }
+}
+
+async function toggleMemoryArchive(id) {
+  const memory = getMemoryById(id);
+
+  if (!memory) {
+    showToast({ type: "warning", message: "记忆片段不存在" });
+    return;
+  }
+
+  const archived = !isMemoryArchived(memory);
+  const path = "/api/memories/archive";
+  startRequestDebug("archive", path);
+  showLoading({
+    title: archived ? "正在归档记忆" : "正在取消归档",
+    message: "正在同步后端记忆状态"
+  });
+
+  try {
+    const payload = await apiRequest(path, {
+      method: "POST",
+      body: JSON.stringify({ id, archived })
+    });
+
+    setMemoriesFromBackend(payload.memories);
+    state.detailMemoryId = id;
+    state.backendOffline = false;
+    state.syncMessage = "";
+    completeRequestDebug("archive", payload);
+    hideLoading();
+    showToast({ type: "success", message: archived ? "已归档" : "已取消归档" });
+  } catch (error) {
+    hideLoading();
+    notifyRequestFailure("记忆归档", "archive", error, {
+      retry: () => toggleMemoryArchive(id)
+    });
+  }
+
+  render();
 }
 
 function renderProfile() {
@@ -2113,9 +2887,7 @@ function renderProfile() {
 
       <div class="privacy-grid">
         ${renderPrivacy("pause", "一键暂停", state.appState.paused ? "已暂停" : "运行中")}
-        ${renderPrivacy("lock", "本地加密", getOnOffText(state.appState.encryptionEnabled))}
         ${renderPrivacy("trash", "片段删除", "删除后端记忆")}
-        ${renderPrivacy("leaf", "低耗模式", getOnOffText(state.appState.lowPowerMode))}
       </div>
 
       ${renderFeaturePanel()}
@@ -2148,11 +2920,6 @@ function renderProfile() {
       </div>
 
       ${renderBackendServiceSettings()}
-
-      <section class="light-card settings-card">
-        ${renderSetting("隐私与权限说明", "查看 Demo 的权限边界")}
-        ${renderSetting("演示数据说明", "查看 mock 数据来源")}
-      </section>
     </section>
   `;
 }
@@ -2184,32 +2951,20 @@ function renderPrivacy(iconName, title, desc) {
   `;
 }
 
-function renderSetting(title, desc) {
-  return `
-    <button class="setting-item" type="button" data-demo="${escapeHtml(title)}">
-      <span>
-        <strong>${escapeHtml(title)}</strong>
-        <span>${escapeHtml(desc)}</span>
-      </span>
-      <span aria-hidden="true">›</span>
-    </button>
-  `;
-}
-
 function getFilteredMemories() {
   const query = state.query.trim().toLowerCase();
   return mockMemories.filter((item) => {
     const typeMatches = state.filter === "all" || item.type === state.filter;
     const searchText = [
-      item.title,
-      item.rawContent,
-      item.aiContent,
-      item.tag?.join(" ") || "",
+      getMemoryTitle(item),
+      getMemoryContent(item),
+      getMemorySummary(item),
+      getMemoryTags(item).join(" "),
       item.location,
-      item.source || "",
+      getMemorySource(item),
       item.category || "",
-      item.keyPoints?.join(" ") || "",
-      item.todos?.join(" ") || ""
+      getMemoryPoints(item).join(" "),
+      getMemoryTodos(item).join(" ")
     ].join(" ").toLowerCase();
     return typeMatches && (!query || searchText.includes(query));
   });
@@ -2234,13 +2989,55 @@ function updateMemoryResults() {
   }
 }
 
-function showToast(message) {
-  document.querySelector(".toast")?.remove();
+function createToastRoot() {
+  if (feedbackState.toastRoot?.isConnected) {
+    return feedbackState.toastRoot;
+  }
+
+  const root = document.createElement("div");
+  root.className = "toast-root";
+  root.setAttribute("aria-live", "polite");
+  root.setAttribute("aria-atomic", "false");
+  document.body.append(root);
+  feedbackState.toastRoot = root;
+  return root;
+}
+
+function showToast(options = {}) {
+  const normalized = typeof options === "string" ? { message: options } : options;
+  const type = normalized.type || "info";
+  const message = normalized.message || "";
+  const title = normalized.title || "";
+  const duration = normalized.duration || 2400;
+  const root = createToastRoot();
   const toast = document.createElement("div");
-  toast.className = "toast";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  window.setTimeout(() => toast.remove(), 1900);
+  const toastId = String(++feedbackState.toastId);
+
+  toast.className = `toast-item ${type}`;
+  toast.dataset.toastId = toastId;
+  toast.innerHTML = `
+    <span class="toast-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">${feedbackIconPaths[type] || feedbackIconPaths.info}</svg>
+    </span>
+    <span class="toast-content">
+      ${title ? `<strong class="toast-title">${escapeHtml(title)}</strong>` : ""}
+      <span class="toast-message">${escapeHtml(message)}</span>
+    </span>
+  `;
+
+  root.append(toast);
+
+  while (root.children.length > 3) {
+    root.firstElementChild?.remove();
+  }
+
+  window.requestAnimationFrame(() => toast.classList.add("is-visible"));
+  window.setTimeout(() => {
+    toast.classList.add("is-leaving");
+    window.setTimeout(() => toast.remove(), 180);
+  }, duration);
+
+  return toast;
 }
 
 function initSplashScreen() {
@@ -2333,16 +3130,6 @@ app.addEventListener("click", (event) => {
       return;
     }
 
-    if (action === "encryption") {
-      toggleSetting("encryption");
-      return;
-    }
-
-    if (action === "low-power") {
-      toggleSetting("lowPower");
-      return;
-    }
-
     if (action === "delete") {
       openDeletePanel();
       return;
@@ -2379,9 +3166,41 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.matches("[data-detail-overlay]")) {
+    state.detailMemoryId = "";
+    render();
+    return;
+  }
+
+  const detailCloseButton = event.target.closest("[data-detail-close]");
+  if (detailCloseButton) {
+    state.detailMemoryId = "";
+    render();
+    return;
+  }
+
+  const copyMemoryButton = event.target.closest("[data-memory-copy]");
+  if (copyMemoryButton) {
+    copyMemoryDetail(copyMemoryButton.dataset.memoryCopy);
+    return;
+  }
+
+  const archiveMemoryButton = event.target.closest("[data-memory-archive]");
+  if (archiveMemoryButton) {
+    toggleMemoryArchive(archiveMemoryButton.dataset.memoryArchive);
+    return;
+  }
+
+  const emptyStartButton = event.target.closest("[data-empty-start]");
+  if (emptyStartButton) {
+    state.tab = "home";
+    render();
+    return;
+  }
+
   const deleteMemoryButton = event.target.closest("[data-delete-memory]");
   if (deleteMemoryButton) {
-    deleteMemory(deleteMemoryButton.dataset.deleteMemory);
+    confirmDeleteMemory(deleteMemoryButton.dataset.deleteMemory);
     return;
   }
 
@@ -2413,15 +3232,12 @@ app.addEventListener("click", (event) => {
   const memoryCard = event.target.closest("[data-memory-id]");
   if (memoryCard) {
     const id = memoryCard.dataset.memoryId;
-    state.expandedId = state.expandedId === id ? "" : id;
-    updateMemoryResults();
+    state.expandedId = id;
+    state.detailMemoryId = id;
+    render();
     return;
   }
 
-  const demoButton = event.target.closest("[data-demo]");
-  if (demoButton) {
-    showToast(`${demoButton.dataset.demo}：当前为前端演示，不触发真实系统权限。`);
-  }
 });
 
 app.addEventListener("input", (event) => {

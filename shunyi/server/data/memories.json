@@ -1,0 +1,80 @@
+[
+  {
+    "id": "memory-fe1bf6f5-02dc-4192-8ed0-3182516f4d13",
+    "type": "text",
+    "title": "AI 修正记录",
+    "rawContent": "那个今天就是我们要弄一下那个 APP，然后硬件那边也要接一下。",
+    "content": "那个今天就是我们要弄一下那个 APP，然后硬件那边也要接一下。",
+    "rawText": "那个今天就是我们要弄一下那个 APP，然后硬件那边也要接一下。",
+    "aiSummary": "今天的任务是优化瞬忆 APP，并准备 ESP32 硬件接入测试。",
+    "summary": "今天的任务是优化瞬忆 APP，并准备 ESP32 硬件接入测试。",
+    "keyPoints": [
+      "优化瞬忆 APP",
+      "准备 ESP32 硬件接入测试"
+    ],
+    "points": [
+      "优化瞬忆 APP",
+      "准备 ESP32 硬件接入测试"
+    ],
+    "todos": [
+      "整理 APP 优化任务",
+      "准备硬件接入测试"
+    ],
+    "tags": [
+      "AI 修正",
+      "APP",
+      "硬件"
+    ],
+    "autoTags": [
+      "AI 修正",
+      "APP",
+      "硬件"
+    ],
+    "source": "android_app",
+    "time": "2026/05/02 18:48:27",
+    "createdAt": "2026-05-02T10:48:27.930Z",
+    "updatedAt": "2026-05-02T10:48:27.930Z",
+    "importance": 90,
+    "archived": false,
+    "category": ""
+  },
+  {
+    "id": "memory-99d871fc-7262-4174-892f-4311488da5b0",
+    "type": "voice",
+    "title": "语音转写记录",
+    "rawContent": "今天我们讨论瞬忆项目，需要优化 APP 交互，并准备 ESP32 硬件联动演示。",
+    "content": "今天我们讨论瞬忆项目，需要优化 APP 交互，并准备 ESP32 硬件联动演示。",
+    "rawText": "今天我们讨论瞬忆项目，需要优化 APP 交互，并准备 ESP32 硬件联动演示。",
+    "aiSummary": "完成了一段会议语音的文字转写。",
+    "summary": "完成了一段会议语音的文字转写。",
+    "keyPoints": [
+      "APP 交互需要优化",
+      "准备 ESP32 硬件联动演示"
+    ],
+    "points": [
+      "APP 交互需要优化",
+      "准备 ESP32 硬件联动演示"
+    ],
+    "todos": [
+      "检查 APP 功能入口交互",
+      "准备硬件联动演示素材"
+    ],
+    "tags": [
+      "语音",
+      "转写",
+      "会议"
+    ],
+    "autoTags": [
+      "语音",
+      "转写",
+      "会议"
+    ],
+    "source": "android_app",
+    "time": "2026/05/02 18:48:18",
+    "createdAt": "2026-05-02T10:48:18.940Z",
+    "updatedAt": "2026-05-02T10:48:18.940Z",
+    "importance": 92,
+    "archived": false,
+    "category": ""
+  }
+]

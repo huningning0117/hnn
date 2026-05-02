@@ -21,8 +21,6 @@ const activityStream = document.querySelector("#activityStream");
 const activityCount = document.querySelector("#activityCount");
 const actionButtons = document.querySelectorAll("[data-action]");
 const dashboardPaused = document.querySelector("#dashboardPaused");
-const dashboardEncryption = document.querySelector("#dashboardEncryption");
-const dashboardLowPower = document.querySelector("#dashboardLowPower");
 const dashboardPrivacy = document.querySelector("#dashboardPrivacy");
 const dashboardMemoryCount = document.querySelector("#dashboardMemoryCount");
 const dashboardLastAction = document.querySelector("#dashboardLastAction");
@@ -41,8 +39,6 @@ const activityLabels = {
   request_meeting_success: "接口成功返回",
   request_meeting_failed: "请求失败",
   settings_pause_update: "一键暂停状态更新",
-  settings_encryption_update: "本地加密状态更新",
-  settings_low_power_update: "低耗模式状态更新",
   memory_added: "新增记忆",
   memory_deleted: "删除记忆片段",
   memories_archived: "自动归档完成",
@@ -563,8 +559,6 @@ function getActivityTone(eventName) {
   if (
     eventName === "start_meeting_click" ||
     eventName === "settings_pause_update" ||
-    eventName === "settings_encryption_update" ||
-    eventName === "settings_low_power_update" ||
     eventName === "memory_deleted"
   ) {
     return "activity-click";
@@ -869,8 +863,6 @@ async function loadAppRuntime() {
     const memories = Array.isArray(memoryPayload.memories) ? memoryPayload.memories : [];
 
     dashboardPaused.textContent = formatBoolean(appState.paused);
-    dashboardEncryption.textContent = formatBoolean(appState.encryptionEnabled);
-    dashboardLowPower.textContent = formatBoolean(appState.lowPowerMode);
     dashboardPrivacy.textContent = formatBoolean(appState.privacyMode);
     dashboardMemoryCount.textContent = memories.length;
     dashboardLastAction.textContent = getTextValue(appState.lastAction, "--");
@@ -880,8 +872,6 @@ async function loadAppRuntime() {
     return { appState, memories };
   } catch (error) {
     dashboardPaused.textContent = "异常";
-    dashboardEncryption.textContent = "异常";
-    dashboardLowPower.textContent = "异常";
     dashboardPrivacy.textContent = "异常";
     appStateUpdatedAt.textContent = "同步失败";
     renderMemoryListError(error.message);

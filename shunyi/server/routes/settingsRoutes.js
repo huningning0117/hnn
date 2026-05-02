@@ -46,28 +46,23 @@ function updateSetting(req, res, field, eventName, lastAction) {
   });
 }
 
+function respondRemovedSetting(res) {
+  res.json({
+    success: false,
+    message: "该功能已移除",
+  });
+}
+
 router.post("/pause", (req, res) => {
   updateSetting(req, res, "paused", "settings_pause_update", "settings_pause_update");
 });
 
 router.post("/encryption", (req, res) => {
-  updateSetting(
-    req,
-    res,
-    "encryptionEnabled",
-    "settings_encryption_update",
-    "settings_encryption_update",
-  );
+  respondRemovedSetting(res);
 });
 
 router.post("/low-power", (req, res) => {
-  updateSetting(
-    req,
-    res,
-    "lowPowerMode",
-    "settings_low_power_update",
-    "settings_low_power_update",
-  );
+  respondRemovedSetting(res);
 });
 
 export default router;
